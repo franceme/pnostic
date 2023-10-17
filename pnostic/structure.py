@@ -251,7 +251,8 @@ class CoreObject(ABC):
 
         cmd = mystring.string.of("{0} -m pip install {1}".format(sys.executable, ' '.join(self.imports)))
         try:
-            cmd.exec()
+            if len(self.imports) > 0:
+                cmd.exec()
             return True
         except:
             return False
