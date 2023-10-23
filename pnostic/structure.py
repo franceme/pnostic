@@ -479,6 +479,7 @@ class operation(structure.GenProcedure):
 		return
 
 operation().run_procedure()
+# or operation()()
     """
     def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None):
         self.fileProviders = fileProviders
@@ -568,6 +569,9 @@ operation().run_procedure()
             finally:
                 logy.send(":> Closing the process")
         sys.exit(0)
+
+    def __call__(self):
+        return self.run_procedure()
 
     @abstractmethod
     def run_procedure(self):
