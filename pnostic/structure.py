@@ -78,9 +78,10 @@ class RepoSifting(object):
 
 
 class RepoObject(RepoSifting):
-    def __init__(self, filename: mystring.string, hash: mystring.string, content: mystring.string, hasVuln: bool, cryVulnId: int, langPattern: mystring.string):
+    def __init__(self, path: mystring.string, hash: mystring.string, content: mystring.string, hasVuln: bool, cryVulnId: int, langPattern: mystring.string = None, file_scan_lambda: mystring.string = None):
         super().__init__()
-        self.filename = filename
+        self.path = path
+        self.file_scan_lambda = file_scan_lambda
         self.hash = hash
         self._content = content
         self.hasVuln = hasVuln
@@ -88,14 +89,23 @@ class RepoObject(RepoSifting):
         self.langPattern = langPattern
 
     @staticmethod
+    def is_dir(self):
+        return os.path.isdir(self.path)
+
+    @staticmethod
+    def str_type(self):
+        return "dir" if self.is_dir else "file"
+
+    @staticmethod
     def _internal_staticKeyTypeMap() -> Dict[str, type]:
         return {
-            "filename": mystring.string,
+            "path": mystring.string,
             "hash": mystring.string,
             "_content": mystring.string,
             "hasVuln": bool,
             "cryVulnId": int,
-            "langPattern": mystring.string
+            "langPattern": mystring.string,
+            "file_scan_lambda": Callable[str, bool]
         }
 
     def updateContent(self, newContent:mystring.string):
@@ -241,6 +251,7 @@ class RepoResultObject(RepoSifting):
 
         return RepoResultObject(**info)
 
+
 class CoreObject(ABC):
     def __init__(self):
         self.imports = []
@@ -384,7 +395,7 @@ class LoggerSet(object):
 class RepoObjectProvider(CoreObject):
     @property
     @abstractmethod
-    def files(self) -> List[RepoObject]:
+    def RepoObjects(self) -> List[RepoObject]:
         pass
 
 
@@ -463,9 +474,10 @@ class operation(structure.GenProcedure):
 		with structure.LoggerSet(loggers=self.loggerSet.loggers, stage="StageOne") as logggg:
 			for runnerSvr in self.runners:
 				with self.getRunnerProcedure(runnerSvr) as runner:
-					for fileObj in self.files:
-						firstScanResults: List[RepoResultObject] = self.scanFile(fileObj, runner())
+					for fileObj in self.RepoObjects:
+						firstScanResults: List[RepoResultObject] = self.scan(fileObj, runner())
 		return
+
 operation().run_procedure()
     """
     def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None):
@@ -489,10 +501,10 @@ operation().run_procedure()
         self.loggerSet.send(msg)
 
     @property
-    def files(self) -> List[RepoObject]:
+    def RepoObjects(self) -> List[RepoObject]:
         for fileProvider in self.fileProviders:
-            for file in fileProvider.files:
-                yield file
+            for RepoObject in fileProvider.RepoObjects:
+                yield RepoObject
 
     def __enter__(self):
         if self.stage:
@@ -561,41 +573,121 @@ operation().run_procedure()
     def run_procedure(self):
         pass
 
-    def scanFile(self, fileObj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False)-> List[RepoResultObject]:
+    def scan(self, repoObj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False)-> List[RepoResultObject]:
+        output:List[RepoResultObject] = []
+        if repoObj.is_dir:
+            if repoObj.file_scan_lambda is None:
+                output = self.scanDir(fileObj = repoObj, runner = runner, stage = stage, notHollow = notHollow)
+            else:
+                for root, dirs, files in os.walk(repoObj.path):
+                    for file in files:
+                        full_file_path = os.path.join(root, file)
+                        if repoObj.file_scan_lambda(full_file_path):
+                            full_file_obj = foil(full_file_path, preload=True)
+                            output += self.scanFile(fileObj = RepoObject(
+                                path=full_file_path,
+                                hash=full_file_obj.hash_content(),
+                                content=full_file_obj.content,
+                                hasVuln=None
+                                cryVulnId=-1,
+                                langPattern=None,
+                                file_scan_lambda=None
+                            ), runner = runner, stage = stage, notHollow = notHollow)
+        else:
+            output = self.scanFile(fileObj = repoObj, runner = runner, stage = stage, notHollow = notHollow)
+        return output
+
+
+    def scanDir(self, dirObj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False)-> List[RepoResultObject]:
         from ephfile import ephfile
 
         exceptionString = None
         output:List[RepoResultObject] = []
 
         try:
-            with LoggerSet(self.loggerSet.loggers, stage="␃ Scanning {0} with {1}".format(fileObj.filename, runner.name())) as logy:
+            with LoggerSet(self.loggerSet.loggers, stage="␃ Scanning {0} with {1}".format(dirObj.path, runner.name())) as logy:
                 logy.send("␀ Starting For Loop")
-                logy.send(fileObj)
-                with ephfile("{0}_stub.py".format(runner.name()), fileObj.content) as eph:
-                    logy.send("␁ Started Scanning File {0}".format(fileObj.filename))
+                logy.send(dirObj)
+                logy.send("␁ Started Scanning {0} {1}".format(dirObj.str_type, dirObj.path))
 
-                    startTime:datetime.datetime = mystring.timestamp.now()
-                    output = runner.scan(eph())
-                    endTime:datetime.datetime = mystring.timestamp.now()
+                startTime:datetime.datetime = mystring.timestamp.now()
+                output = runner.scan(dirObj.path)
+                endTime:datetime.datetime = mystring.timestamp.now()
 
-                    resultObject: RepoResultObject
-                    for resultObject in output:
-                        resultObject.startDateTime = startTime
-                        resultObject.endDateTime = endTime
-                        if stage:
-                            resultObject.stage=stage
-                        logy.send("␀ Starting Sending For Loop")
-                        logy.send(resultObject)
-                        logy.send("␀ Ending Sending For Loop")
+                resultObject: RepoResultObject
+                for resultObject in output:
+                    resultObject.startDateTime = startTime
+                    resultObject.endDateTime = endTime
+                    if stage:
+                        resultObject.stage=stage
+                    logy.send("␀ Starting Sending For Loop")
+                    logy.send(resultObject)
+                    logy.send("␀ Ending Sending For Loop")
 
-                    logy.send("␂ Ended Scanning File {0}".format(fileObj.filename))
+                    logy.send("␂ Ended Scanning {0} {1}".format(dirObj.str_type, dirObj.path))
         except Exception as e:
             exceptionString = str(e)
 
         if notHollow and len(output) == 0:
             output = [RepoResultObject.newEmpty(
-                projecttype=fileObj.filename,
-                projectname=fileObj.filename,
+                projecttype=dirObj.path,
+                projectname=dirObj.path,
+                projecturl=None,
+                qual_name=None,
+                tool_name=runner.name(),
+                stage=stage,
+                ExceptionMsg=exceptionString,
+                startDateTime=None,
+                endDateTime=None
+            )]
+
+        if self.perScan:
+            self.perScan()
+        return output
+
+
+    def scanObj(self, obj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False)-> List[RepoResultObject]:
+        from ephfile import ephfile
+
+        exceptionString = None
+        output:List[RepoResultObject] = []
+
+        try:
+            with LoggerSet(self.loggerSet.loggers, stage="␃ Scanning {0} with {1}".format(obj.path, runner.name())) as logy:
+                logy.send("␀ Starting For Loop")
+                logy.send(obj)
+
+                if obj.is_dir:
+                    logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path))
+                    startTime:datetime.datetime = mystring.timestamp.now()
+                    output = runner.scan(obj.path)
+                    endTime:datetime.datetime = mystring.timestamp.now()
+                else:
+                    with ephfile("{0}_stub.py".format(runner.name()), obj.content) as eph:
+                        logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path))
+
+                        startTime:datetime.datetime = mystring.timestamp.now()
+                        output = runner.scan(eph())
+                        endTime:datetime.datetime = mystring.timestamp.now()
+
+                resultObject: RepoResultObject
+                for resultObject in output:
+                    resultObject.startDateTime = startTime
+                    resultObject.endDateTime = endTime
+                    if stage:
+                        resultObject.stage=stage
+                    logy.send("␀ Starting Sending For Loop")
+                    logy.send(resultObject)
+                    logy.send("␀ Ending Sending For Loop")
+
+                    logy.send("␂ Ended Scanning {0} {1}".format(str_type.is_dir, obj.path))
+        except Exception as e:
+            exceptionString = str(e)
+
+        if notHollow and len(output) == 0:
+            output = [RepoResultObject.newEmpty(
+                projecttype=obj.path,
+                projectname=obj.path,
                 projecturl=None,
                 qual_name=None,
                 tool_name=runner.name(),

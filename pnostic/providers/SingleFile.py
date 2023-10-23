@@ -10,7 +10,8 @@ class app(RepoObjectProvider):
         self.vulnId = vulnId
         self.hasVuln = self.vulnId is not -1
         self.langPattern = langPattern
-        self.filename = "stub.py"
+        self.path = "stub.py"
+        self.file_scan_lambda = None
 
     def initialize(self) -> bool:
         print("Initializing")
@@ -26,10 +27,11 @@ class app(RepoObjectProvider):
     @property
     def files(self) -> List[RepoObject]:
         yield RepoObject(
-            filename=self.filename,
+            path=self.path,
             hash=self.content.tohash(),
             content=self.content,
             hasVuln=self.hasVuln,
             cryVulnId=self.vulnId,
-            langPattern=self.langPattern
+            langPattern=self.langPattern,
+            file_scan_lambda=self.file_scan_lambda
         )
