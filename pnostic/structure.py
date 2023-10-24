@@ -493,8 +493,11 @@ operation().run_procedure()
             self.loggerSet.add(logger)
 
         for big_list in (fileProviders + runners + loggersset):
-            for core in big_list:
-                core.installImports()
+            if isinstance(big_list, list):
+                for core in big_list:
+                    core.installImports()
+            else:
+                big_list.installImports()
         
         if general_prefix:
             self.loggerSet.set_prefix(general_prefix)
