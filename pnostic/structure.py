@@ -596,7 +596,7 @@ operation().run_procedure()
                                 path=full_file_path,
                                 hash=full_file_obj.hash_content(),
                                 content=full_file_obj.content,
-                                hasVuln=None
+                                hasVuln=None,
                                 cryVulnId=-1,
                                 langPattern=None,
                                 file_scan_lambda=None
