@@ -25,7 +25,7 @@ class app(RepoObjectProvider):
         return True
 
     @property
-    def files(self) -> List[RepoObject]:
+    def RepoObjects(self) -> List[RepoObject]:
         yield RepoObject(
             path=self.path,
             hash=self.content.tohash(),
