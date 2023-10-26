@@ -550,7 +550,7 @@ operation().run_procedure()
                 self.loggerSet.send(":>␆ START")
                 self.runner.clean()
 
-        return lambda runner:RunnerProcedure(runner=runner, loggerSet=self.loggerSet, scanr=self.scanFile)
+        return lambda runner:RunnerProcedure(runner=runner, loggerSet=self.loggerSet, scanr=self.scan)
 
     def process(self, isAliveMin:int=None):
         with LoggerSet(self.loggerSet.loggers, stage=":>. Starting the overall process") as logy:
@@ -599,7 +599,7 @@ operation().run_procedure()
                             file_scan_lambda=None
                         ), runner = runner, stage = stage, notHollow = notHollow)
         else:
-            output = self.scanObj(fileObj = repoObj, runner = runner, stage = stage, notHollow = notHollow)
+            output = self.scanObj(obj = repoObj, runner = runner, stage = stage, notHollow = notHollow)
         return output
 
     def scanObj(self, obj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False)-> List[RepoResultObject]:
