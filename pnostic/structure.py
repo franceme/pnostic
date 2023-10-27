@@ -313,6 +313,12 @@ class Logger(CoreObject):
         if file_size < self.file_size_limit_bytes:
             return [file_path]
 
+        if not file_path.endswith(".zip"):
+            import hugg
+            zyp_container = hugg.zyp(file_path+".zip")
+            zyp_container[file_path] = file_path
+            file_path = zyp_container.location
+
         return splych.file_split(file_path, chunk_size=self.file_size_limit_bytes, delete_original=True)
 
     def file_name(self, result:RepoSifting, extraString:str='', prefix:str='', suffix:str=".txt", newFile:bool=True)->str:
