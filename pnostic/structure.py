@@ -298,6 +298,10 @@ class Logger(CoreObject):
         pass
 
     @abstractmethod
+    def emergency(self, msg:mystring.string)->bool:
+        pass
+
+    @abstractmethod
     def parameter(self,parameter:RepoObject)->bool:
         pass
 
@@ -364,9 +368,10 @@ class Logger(CoreObject):
 
 
 class LoggerSet(object):
-    def __init__(self, loggers=[], stage:str=None):
+    def __init__(self, loggers=[], stage:str=None,log_debug_messages=False):
         self.loggers = loggers
         self.stage = stage
+        self.log_debug_messages = log_debug_messages
 
     def __len__(self):
         return len(self.loggers)
@@ -381,22 +386,28 @@ class LoggerSet(object):
 
     def start(self, stage:mystring.string):
         for logger in self.loggers:
-            logger.send(":>␋ sending to logger")
+            if self.log_debug_messages:logger.send(":>␋ sending to logger")
             logger.start(self.stage or stage)
-            logger.send(":>␋ ^^^^^ sending to logger")
+            if self.log_debug_messages:logger.send(":>␋ ^^^^^ sending to logger")
         return self
 
-    def send(self, msg:Union[mystring.string, RepoObject, RepoResultObject])->bool:
+    def send(self, msg:Union[mystring.string, RepoObject, RepoResultObject], is_debug:bool=False)->bool:
+        if is_debug and self.log_debug_messages or not is_debug:
+            for logger in self.loggers:
+                if self.log_debug_messages:logger.send(":>␈ sending to logger")
+                logger.send(msg)
+                if self.log_debug_messages:logger.send(":>␈ end sending to logger")
+        return self
+
+    def emergency(self, msg:mystring.string)->bool:
         for logger in self.loggers:
-            logger.send(":>␈ sending to logger")
-            logger.send(msg)
-            logger.send(":>␈ end sending to logger")
+            logger.emergency(msg)
 
     def stop(self):
         for logger in self.loggers:
-            logger.send(":>␇ sending to logger")
+            if self.log_debug_messages:logger.send(":>␇ sending to logger")
             logger.stop()
-            logger.send(":>␇ end sending to logger")
+            if self.log_debug_messages:logger.send(":>␇ end sending to logger")
         return self
 
     def __enter__(self, stage:Union[mystring.string, None]=None):
@@ -497,14 +508,14 @@ class operation(structure.GenProcedure):
 operation().run_procedure()
 # or operation()()
     """
-    def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None):
+    def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False):
         self.fileProviders = fileProviders
         self.runners = runners
 
         self.perScan = perScan
         self.stage = None
         #https://superfastpython.com/asyncio-async-with/
-        self.loggerSet = LoggerSet()
+        self.loggerSet = LoggerSet(log_debug_messages = log_debug_messages)
         for logger in loggersset:
             self.loggerSet.add(logger)
 
@@ -546,9 +557,9 @@ operation().run_procedure()
                 self.scanFile = scanr
 
             def log(self, msg:Union[mystring.string, RepoObject, RepoResultObject]):
-                self.loggerSet.send(":>␄ START LOG")
+                self.loggerSet.send(":>␄ START LOG",is_debug=True)
                 self.loggerSet.send(msg)
-                self.loggerSet.send(":>␄ END LOG")
+                self.loggerSet.send(":>␄ END LOG",is_debug=True)
 
             def __call__(self) -> Runner:
                 return self.runner
@@ -557,13 +568,13 @@ operation().run_procedure()
                 self.scanFile(fileObj, self.runner)
 
             def __enter__(self):
-                self.loggerSet.send(":>␅ START")
+                self.loggerSet.send(":>␅ START",is_debug=True)
                 self.runner.initialize()
-                self.loggerSet.send(":>␅ END START")
+                self.loggerSet.send(":>␅ END START",is_debug=True)
                 return self
 
             def __exit__(self, _type=None, value=None, traceback=None):
-                self.loggerSet.send(":>␆ START")
+                self.loggerSet.send(":>␆ START",is_debug=True)
                 self.runner.clean()
 
         return lambda runner:RunnerProcedure(runner=runner, loggerSet=self.loggerSet, scanr=self.scan)
@@ -582,12 +593,12 @@ operation().run_procedure()
                 aliveThread.start()
 
             try:
-                logy.send(":> Starting the procedure")
+                logy.send(":> Starting the procedure",is_debug=True)
                 self.run_procedure()
             except Exception as e:
-                logy.send(":> Hit an unexpected error {0}".format(e))
+                logy.emergency(":> Hit an unexpected error {0}".format(e))
             finally:
-                logy.send(":> Closing the process")
+                logy.send(":> Closing the process",is_debug=True)
         sys.exit(0)
 
     def __call__(self):
@@ -626,21 +637,32 @@ operation().run_procedure()
 
         try:
             with LoggerSet(self.loggerSet.loggers, stage="␃ Scanning {0} with {1}".format(obj.path, runner.name())) as logy:
-                logy.send("␀ Starting For Loop")
+                logy.send("␀ Starting For Loop",is_debug=True)
                 logy.send(obj)
 
+                endTime=None
+
                 if obj.is_dir:
-                    logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path))
-                    startTime:datetime.datetime = mystring.timestamp.now()
-                    output = runner.scan(obj.path)
-                    endTime:datetime.datetime = mystring.timestamp.now()
+                    logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path),is_debug=True)
+                    try:
+                        startTime:datetime.datetime = mystring.timestamp.now()
+                        output = runner.scan(obj.path)
+                        endTime:datetime.datetime = mystring.timestamp.now()
+                    except Exception as e:
+                        self.loggerSet.emergency(str(e))
                 else:
                     with ephfile("{0}_stub.py".format(runner.name()), obj.content) as eph:
-                        logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path))
+                        logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path),is_debug=True)
 
-                        startTime:datetime.datetime = mystring.timestamp.now()
-                        output = runner.scan(eph())
-                        endTime:datetime.datetime = mystring.timestamp.now()
+                        try:
+                            startTime:datetime.datetime = mystring.timestamp.now()
+                            output = runner.scan(eph())
+                            endTime:datetime.datetime = mystring.timestamp.now()
+                        except Exception as e:
+                            self.loggerSet.emergency(str(e))
+
+                if endTime is None:
+                    endTime = startTime
 
                 resultObject: RepoResultObject
                 for resultObject in output:
@@ -648,11 +670,11 @@ operation().run_procedure()
                     resultObject.endDateTime = endTime
                     if stage:
                         resultObject.stage=stage
-                    logy.send("␀ Starting Sending For Loop")
+                    logy.send("␀ Starting Sending For Loop",is_debug=True)
                     logy.send(resultObject)
-                    logy.send("␀ Ending Sending For Loop")
+                    logy.send("␀ Ending Sending For Loop",is_debug=True)
 
-                    logy.send("␂ Ended Scanning {0} {1}".format(str_type.is_dir, obj.path))
+                    logy.send("␂ Ended Scanning {0} {1}".format(str_type.is_dir, obj.path),is_debug=True)
         except Exception as e:
             exceptionString = str(e)
 

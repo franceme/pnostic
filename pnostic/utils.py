@@ -9,6 +9,24 @@ def now() -> datetime.datetime:
     current.str = lambda:fancy_date(current)
     return current
 
+class bcolors:
+    #https://stackoverflow.com/questions/287871/how-do-i-print-colored-text-to-the-terminal
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+def custom_msg(msg, color:bcolors):
+    return "{0}{1}{2}".format(
+        color, msg, bcolors.ENDC
+    )
+
 def convert_size_to_bytes(size_str):
     #https://stackoverflow.com/questions/44307480/convert-size-notation-with-units-100kb-32mb-to-number-of-bytes-in-python
     """Convert human filesizes to bytes.

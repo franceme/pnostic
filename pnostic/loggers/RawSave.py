@@ -1,6 +1,7 @@
 from typing import Tuple, List, Dict, Union
 import mystring
 from pnostic.structure import Logger, RepoResultObject, RepoObject, RepoSifting
+import pnostic.utils as utils
 
 class app(Logger):
     def __init__(self):
@@ -16,6 +17,10 @@ class app(Logger):
         return True
 
     def message(self, msg: str) -> bool:
+        return True
+
+    def emergency(self, msg:str)->bool:
+        utils.custom_msg(msg, utils.bcolors.FAIL)
         return True
 
     def parameter(self, parameter: RepoObject) -> bool:

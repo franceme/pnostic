@@ -1,4 +1,5 @@
 from pnostic.structure import Logger, RepoResultObject, RepoObject
+import pnostic.utils as utils
 import mystring
 
 
@@ -18,6 +19,10 @@ class app(Logger):
 
     def message(self, msg: mystring.string) -> bool:
         print(msg)
+        return True
+
+    def emergency(self, msg:str)->bool:
+        utils.custom_msg(msg, utils.bcolors.FAIL)
         return True
 
     def parameter(self, parameter: RepoObject) -> bool:
