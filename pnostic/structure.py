@@ -1,6 +1,6 @@
 from typing import List, Dict, Union, Callable
 from abc import ABC, abstractmethod
-import mystring, uuid, threading, os, sys
+import mystring, uuid, threading, os, sys, splych
 
 try: #Python2
     import __builtin__ as builtins
@@ -304,6 +304,16 @@ class Logger(CoreObject):
     @abstractmethod
     def result(self,result:RepoResultObject)->bool:
         pass
+
+    def file_size_limit_bytes(self)->float:
+        return float('inf')
+
+    def break_file_down(self, file_path:str)->List[str]:
+        file_size = os.path.getsize(file_path)
+        if file_size < self.file_size_limit_bytes:
+            return [file_path]
+
+        return splych.file_split(file_path, chunk_size=self.file_size_limit_bytes, delete_original=True)
 
     def file_name(self, result:RepoSifting, extraString:str='', prefix:str='', suffix:str=".txt", newFile:bool=True)->str:
         current_file = mystring.string.of("{0}_{1}_{2}_{3}".format(
