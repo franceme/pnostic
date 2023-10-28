@@ -95,9 +95,9 @@ elif selfArg('zip'):
 	sys.exit(zip_program())
 # endregion
 # region Setup
-extra_requires = {
+extras_require = {
 }
-extra_requires['all'] = [value for key,values in extra_requires.items() for value in values]
+extras_require['all'] = [value for key,values in extra_requires.items() for value in values]
 
 setup(
 	name=NAME,
@@ -121,7 +121,7 @@ setup(
 		"splych",
 		"hugg"
 	],
-	extra_requires = extra_requires,
+	extras_require = extras_require,
 	include_package_data=True,
 	classifiers=[
 		'Programming Language :: Python',
