@@ -286,6 +286,47 @@ class Runner(CoreObject):
     def scan(self,filePath: str) -> List[RepoResultObject]:
         pass
 
+class Envelop(CoreObject):
+    @abstractmethod
+    def per_next_repo_obj(self,repo_object: RepoObject):
+        pass
+
+    @abstractmethod
+    def per_repo_obj_scan(self,repo_object: RepoObject, runner:Runner):
+        pass
+
+    @abstractmethod
+    def per_repo_obj_scan_result(self,repo_object: RepoResultObject, runner:Runner):
+        pass
+
+class EnvelopSet(object):
+    def __init__(self, envelops=[]):
+        self.envelops = envelops
+
+    def __len__(self):
+        return len(self.envelops)
+
+    def add(self, envelop:Envelop):
+        envelop.initialize()
+        self.envelops += [envelop]
+
+    def per_next_repo_obj(self,repo_object: RepoObject):
+        for envelop in self.envelops:
+            try:
+                envelop.per_next_repo_obj(repo_object)
+            except:pass
+
+    def per_repo_obj_scan(self,repo_object: RepoObject, runner:Runner):
+        for envelop in self.envelops:
+            try:
+                envelop.per_repo_obj_scan(repo_object, runner)
+            except:pass
+
+    def per_repo_obj_scan_result(self,repo_object: RepoResultObject, runner:Runner):
+        for envelop in self.envelops:
+            try:
+                envelop.per_repo_obj_scan_result(repo_object, runner)
+            except:pass
 
 class Logger(CoreObject):
     def __init__(self):
@@ -508,7 +549,7 @@ class operation(structure.GenProcedure):
 operation().run_procedure()
 # or operation()()
     """
-    def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False):
+    def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger]=[], collecterset:List[Envelop]=[], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False):
         self.fileProviders = fileProviders
         self.runners = runners
 
@@ -518,8 +559,12 @@ operation().run_procedure()
         self.loggerSet = LoggerSet(log_debug_messages = log_debug_messages)
         for logger in loggersset:
             self.loggerSet.add(logger)
+        
+        self.envelopSet = EnvelopSet()
+        for envelop in collecterset:
+            self.envelopSet.add(envelop)
 
-        for big_list in (fileProviders + runners + loggersset):
+        for big_list in (fileProviders + runners + loggersset + collecterset):
             if isinstance(big_list, list):
                 for core in big_list:
                     core.installImports()
@@ -535,8 +580,9 @@ operation().run_procedure()
     @property
     def RepoObjects(self) -> List[RepoObject]:
         for fileProvider in self.fileProviders:
-            for RepoObject in fileProvider.RepoObjects:
-                yield RepoObject
+            for RepoObj in fileProvider.RepoObjects:
+                self.envelopSet.per_next_repo_obj(RepoObj)
+                yield RepoObj
 
     def __enter__(self):
         if self.stage:
@@ -609,6 +655,7 @@ operation().run_procedure()
         pass
 
     def scan(self, repoObj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False)-> List[RepoResultObject]:
+        self.envelopSet.per_repo_obj_scan(repoObj, runner)
         output:List[RepoResultObject] = []
         if repoObj.is_dir and repoObj.file_scan_lambda is not None:
             for root, dirs, files in os.walk(repoObj.path):
@@ -627,6 +674,10 @@ operation().run_procedure()
                         ), runner = runner, stage = stage, notHollow = notHollow)
         else:
             output = self.scanObj(obj = repoObj, runner = runner, stage = stage, notHollow = notHollow)
+        
+        for RepoResultObj in output:
+            self.envelopSet.per_repo_obj_scan_result(repoObj, runner)
+        
         return output
 
     def scanObj(self, obj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False)-> List[RepoResultObject]:
