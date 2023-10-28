@@ -74,3 +74,11 @@ def convert_size_to_bytes(size_str):
         elif size_str.endswith('byte'):
             size_str = size_str[0:-4]
     return int(size_str)
+
+def clean_operators():
+	import shutil
+	for x in ["runners","loggers","providers"]:
+		try:
+			shutil.rmtree("{0}/".format(x))
+		except:
+			pass
