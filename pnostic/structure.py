@@ -693,7 +693,7 @@ operation().run_procedure()
 
                 endTime=None
 
-                if obj.is_dir:
+                if obj.content is None:
                     logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path),is_debug=True)
                     try:
                         startTime:datetime.datetime = mystring.timestamp.now()
