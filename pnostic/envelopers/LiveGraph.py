@@ -34,6 +34,7 @@ class app(Envelop):
         return mystring.string.of("LiveGraph")
 
     def flask_runner(self):
+        self.installImports()
         from flask import Flask
         import pyvibe as pv
         self.flask_app = Flask(__name__)
