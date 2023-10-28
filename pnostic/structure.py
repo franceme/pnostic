@@ -549,7 +549,7 @@ class operation(structure.GenProcedure):
 operation().run_procedure()
 # or operation()()
     """
-    def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger]=[], collecterset:List[Envelop]=[], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False):
+    def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger]=[], enveloperset:List[Envelop]=[], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False):
         self.fileProviders = fileProviders
         self.runners = runners
 
@@ -561,10 +561,10 @@ operation().run_procedure()
             self.loggerSet.add(logger)
         
         self.envelopSet = EnvelopSet()
-        for envelop in collecterset:
+        for envelop in enveloperset:
             self.envelopSet.add(envelop)
 
-        for big_list in (fileProviders + runners + loggersset + collecterset):
+        for big_list in (fileProviders + runners + loggersset + enveloperset):
             if isinstance(big_list, list):
                 for core in big_list:
                     core.installImports()
