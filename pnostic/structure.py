@@ -255,6 +255,7 @@ class RepoResultObject(RepoSifting):
 class CoreObject(ABC):
     def __init__(self):
         self.imports = []
+        import sys;self.executable = sys.executable
 
     def installImports(self) -> bool:
         if not hasattr(self, "imports"):
