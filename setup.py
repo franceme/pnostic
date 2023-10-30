@@ -97,7 +97,7 @@ elif selfArg('zip'):
 # region Setup
 extras_require = {
 }
-extras_require['all'] = [value for key,values in extra_requires.items() for value in values]
+extras_require['all'] = [value for key,values in extras_require.items() for value in values]
 
 setup(
 	name=NAME,
