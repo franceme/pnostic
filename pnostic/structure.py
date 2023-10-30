@@ -88,7 +88,7 @@ class RepoObject(RepoSifting):
         self.cryVulnId = cryVulnId
         self.langPattern = langPattern
 
-    @staticmethod
+    @property
     def is_dir(self):
         return os.path.isdir(self.path)
 
