@@ -664,7 +664,7 @@ operation().run_procedure()
                 for file in files:
                     full_file_path = os.path.join(root, file)
                     if repoObj.file_scan_lambda(full_file_path):
-                        full_file_obj = foil(full_file_path, preload=True)
+                        full_file_obj = mystring.foil(full_file_path, preload=True)
                         output += self.scanObj(obj = RepoObject(
                             path=full_file_path,
                             hash=full_file_obj.hash_content(),
