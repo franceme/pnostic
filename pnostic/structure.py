@@ -1,6 +1,6 @@
 from typing import List, Dict, Union, Callable
 from abc import ABC, abstractmethod
-import mystring, uuid, threading, os, sys, splych
+import mystring, uuid, threading, os, sys, splych, datetime
 
 try: #Python2
     import __builtin__ as builtins
@@ -719,6 +719,9 @@ operation().run_procedure()
                 if endTime is None:
                     endTime = startTime
 
+                if not isinstance(output, list) and isinstance(output, list):
+                    output = [output] 
+
                 resultObject: RepoResultObject
                 for resultObject in output:
                     resultObject.startDateTime = startTime
@@ -729,7 +732,7 @@ operation().run_procedure()
                     logy.send(resultObject)
                     logy.send("␀ Ending Sending For Loop",is_debug=True)
 
-                    logy.send("␂ Ended Scanning {0} {1}".format(str_type.is_dir, obj.path),is_debug=True)
+                    logy.send("␂ Ended Scanning {0} {1}".format(obj.is_dir, obj.path),is_debug=True)
         except Exception as e:
             exceptionString = str(e)
             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
