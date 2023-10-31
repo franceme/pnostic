@@ -643,7 +643,8 @@ operation().run_procedure()
                 logy.send(":> Starting the procedure",is_debug=True)
                 self.run_procedure()
             except Exception as e:
-                logy.emergency(":> Hit an unexpected error {0}".format(e))
+                exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                logy.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
             finally:
                 logy.send(":> Closing the process",is_debug=True)
         sys.exit(0)
@@ -701,7 +702,8 @@ operation().run_procedure()
                         output = runner.scan(obj.path)
                         endTime:datetime.datetime = mystring.timestamp.now()
                     except Exception as e:
-                        self.loggerSet.emergency(str(e))
+                        exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                        self.loggerSet.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
                 else:
                     with ephfile("{0}_stub.py".format(runner.name()), obj.content) as eph:
                         logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path),is_debug=True)
@@ -711,7 +713,8 @@ operation().run_procedure()
                             output = runner.scan(eph())
                             endTime:datetime.datetime = mystring.timestamp.now()
                         except Exception as e:
-                            self.loggerSet.emergency(str(e))
+                            exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                            self.loggerSet.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
 
                 if endTime is None:
                     endTime = startTime
@@ -729,6 +732,8 @@ operation().run_procedure()
                     logy.send("␂ Ended Scanning {0} {1}".format(str_type.is_dir, obj.path),is_debug=True)
         except Exception as e:
             exceptionString = str(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            logy.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
 
         if notHollow and len(output) == 0:
             output = [RepoResultObject.newEmpty(
