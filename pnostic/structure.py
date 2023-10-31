@@ -647,6 +647,7 @@ operation().run_procedure()
                 logy.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
             finally:
                 logy.send(":> Closing the process",is_debug=True)
+        logy.send("Exiting the Scan")
         sys.exit(0)
 
     def __call__(self):
