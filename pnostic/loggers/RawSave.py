@@ -1,4 +1,4 @@
-from typing import Tuple, List, Dict, Union
+from typing import Tuple, List, Dict, Union, os,sys
 import mystring
 from pnostic.structure import Logger, RepoResultObject, RepoObject, RepoSifting
 import pnostic.utils as utils
@@ -32,7 +32,9 @@ class app(Logger):
                 self.file_name(parameter, parameter.filename, suffix=".pkl")
             )
         except Exception as e:
-            print(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
+            print(msg)
         return True
 
     def result(self, result: RepoResultObject) -> bool:
@@ -44,5 +46,7 @@ class app(Logger):
                 self.file_name(result, result.tool_name, suffix=".pkl")
             )
         except Exception as e:
-            print(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
+            print(msg)
         return True
