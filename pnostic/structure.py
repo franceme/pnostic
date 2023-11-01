@@ -48,6 +48,16 @@ class RepoSifting(object):
         import json
         return mystring.string.of(json.dumps(self.toMap())).tobase64(prefix=True)
 
+    def base64JsonStringExpand(self):
+        import json
+        output = None
+        try:
+            output = mystring.string.of(json.dumps(self.toMap())).tobase64(prefix=True)
+        except Exception as e:
+            print(e)
+            print("^^^^^^^^^^^^^^^")
+        return output
+
     @property
     def csvString(self):
         #https://stackoverflow.com/questions/9157314/how-do-i-write-data-into-csv-format-as-string-not-file
