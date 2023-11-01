@@ -734,8 +734,10 @@ operation().run_procedure()
                         logy.send("␁ Succeeded in Scanning {0} {1}".format(obj.str_type(), obj.path))
                     except Exception as e:
                         exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                        self.loggerSet.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
-                        logy.send("␁ Failed in Scanning {0} {1}".format(obj.str_type(), obj.path))
+                        msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
+                        self.loggerSet.emergency(msg)
+                        logy.send(msg)
+                        print(msg)
                 else:
                     with ephfile("{0}_stub.py".format(runner.name()), obj.content) as eph:
                         logy.send("␁ Started Scanning {0} {1}".format(obj.str_type(), obj.path))
@@ -747,8 +749,10 @@ operation().run_procedure()
                             logy.send("␁ Succeeded in Scanning {0} {1}".format(obj.str_type(), obj.path))
                         except Exception as e:
                             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                            self.loggerSet.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
-                            logy.send("␁ Failed in Scanning {0} {1}".format(obj.str_type(), obj.path))
+                            msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
+                            self.loggerSet.emergency(msg)
+                            logy.send(msg)
+                            print(msg)
 
                         logy.send("␁ Finished Scanning {0} {1}".format(obj.str_type(), obj.path))
 
@@ -760,15 +764,21 @@ operation().run_procedure()
 
                 resultObject: RepoResultObject
                 for resultObject in output:
-                    resultObject.startDateTime = "" if startTime is None else str(mystring.date_to_iso(startTime))
-                    resultObject.endDateTime = "" if endTime is None else str(mystring.date_to_iso(endTime))
-                    if stage:
-                        resultObject.stage=stage
-                    logy.send("␀ Starting Sending For Loop")
-                    logy.send(resultObject)
-                    logy.send("␀ Ending Sending For Loop")
+                    try:
+                        resultObject.startDateTime = "" if startTime is None else str(mystring.date_to_iso(startTime))
+                        resultObject.endDateTime = "" if endTime is None else str(mystring.date_to_iso(endTime))
+                        if stage:
+                            resultObject.stage=stage
+                        logy.send("␀ Starting Sending For Loop")
+                        logy.send(resultObject)
+                        logy.send("␀ Ending Sending For Loop")
+                    except Exception as e:
+                        exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                        msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
+                        self.loggerSet.emergency(msg)
+                        logy.send(msg)
+                        print(msg)
 
-                    logy.send("␂ Ended Scanning {0} {1}".format(obj.is_dir, obj.path))
         except Exception as e:
             exceptionString = str(e)
             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
