@@ -45,7 +45,7 @@ class app(Logger):
             print(result.__dict__)
             result.startDateTime = "" if result.startDateTime is None else (result.startDateTime if isinstance(result.startDateTime,str) else str(mystring.date_to_iso(result.startDateTime)))
             result.endDateTime = "" if result.endDateTime is None else (result.endDateTime if isinstance(result.endDateTime,str) else str(mystring.date_to_iso(result.endDateTime)))
-            result.to_pickle(
+            result.frame.to_pickle(
                 self.file_name(result, result.tool_name, suffix=".pkl")
             )
         except Exception as e:
