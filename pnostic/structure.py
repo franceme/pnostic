@@ -44,11 +44,11 @@ class RepoSifting(object):
         return json.dumps(self.toMap())
 
     @property
-    def base64JsonString(self):
+    def base64JsonStringExpand(self):
         import json
         return mystring.string.of(json.dumps(self.toMap())).tobase64(prefix=True)
 
-    def base64JsonStringExpand(self):
+    def base64JsonString(self):
         import json
         output = None
         try:
