@@ -761,10 +761,11 @@ operation().run_procedure()
                     logy.send(">?> 1")
                     with ephfile("{0}_stub.py".format(runner.name()), obj.content) as eph:
                         logy.send(">?> 2")
-                        logy.send("␁ Started Scanning {0} {1}".format(obj.str_type(), obj.path))
+                        #logy.send("␁ Started Scanning {0} {1}".format(obj.str_type(), obj.path))
                         logy.send(">?> 3")
 
                         try:
+                            logy.send(">?> 3.5")
                             startTime:datetime.datetime = mystring.current_date()
                             logy.send(">?> 4")
                             output = runner.scan(eph())
