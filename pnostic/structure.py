@@ -633,9 +633,9 @@ operation().run_procedure()
                 self.scanFile = scanr
 
             def log(self, msg:Union[mystring.string, RepoObject, RepoResultObject]):
-                self.loggerSet.send(":>␄ START LOG",is_debug=True)
+                self.loggerSet.send(":>␄ START LOG")
                 self.loggerSet.send(msg)
-                self.loggerSet.send(":>␄ END LOG",is_debug=True)
+                self.loggerSet.send(":>␄ END LOG")
 
             def __call__(self) -> Runner:
                 return self.runner
@@ -644,13 +644,13 @@ operation().run_procedure()
                 self.scanFile(fileObj, self.runner)
 
             def __enter__(self):
-                self.loggerSet.send(":>␅ START",is_debug=True)
+                self.loggerSet.send(":>␅ START")
                 self.runner.initialize()
-                self.loggerSet.send(":>␅ END START",is_debug=True)
+                self.loggerSet.send(":>␅ END START")
                 return self
 
             def __exit__(self, _type=None, value=None, traceback=None):
-                self.loggerSet.send(":>␆ START",is_debug=True)
+                self.loggerSet.send(":>␆ START")
                 self.runner.clean()
 
         return lambda runner:RunnerProcedure(runner=runner, loggerSet=self.loggerSet, scanr=self.scan)
@@ -669,13 +669,13 @@ operation().run_procedure()
                 aliveThread.start()
 
             try:
-                logy.send(":> Starting the procedure",is_debug=True)
+                logy.send(":> Starting the procedure")
                 self.run_procedure()
             except Exception as e:
                 exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 logy.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
             finally:
-                logy.send(":> Closing the process",is_debug=True)
+                logy.send(":> Closing the process")
         logy.send("Exiting the Scan")
         sys.exit(0)
 
@@ -720,13 +720,13 @@ operation().run_procedure()
 
         try:
             with LoggerSet(self.loggerSet.loggers, stage="␃ Scanning {0} with {1}".format(obj.path, runner.name())) as logy:
-                logy.send("␀ Starting For Loop",is_debug=True)
+                logy.send("␀ Starting For Loop")
                 logy.send(obj)
 
                 endTime=None
 
                 if obj.content is None:
-                    logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path),is_debug=True)
+                    logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path))
                     try:
                         startTime:datetime.datetime = mystring.timestamp.now()
                         output = runner.scan(obj.path)
@@ -736,7 +736,7 @@ operation().run_procedure()
                         self.loggerSet.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
                 else:
                     with ephfile("{0}_stub.py".format(runner.name()), obj.content) as eph:
-                        logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path),is_debug=True)
+                        logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path))
 
                         try:
                             startTime:datetime.datetime = mystring.timestamp.now()
@@ -758,11 +758,11 @@ operation().run_procedure()
                     resultObject.endDateTime = endTime
                     if stage:
                         resultObject.stage=stage
-                    logy.send("␀ Starting Sending For Loop",is_debug=True)
+                    logy.send("␀ Starting Sending For Loop")
                     logy.send(resultObject)
-                    logy.send("␀ Ending Sending For Loop",is_debug=True)
+                    logy.send("␀ Ending Sending For Loop")
 
-                    logy.send("␂ Ended Scanning {0} {1}".format(obj.is_dir, obj.path),is_debug=True)
+                    logy.send("␂ Ended Scanning {0} {1}".format(obj.is_dir, obj.path))
         except Exception as e:
             exceptionString = str(e)
             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
