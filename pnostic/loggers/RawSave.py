@@ -25,13 +25,14 @@ class app(Logger):
 
     def parameter(self, parameter: RepoObject) -> bool:
         try:
-            print("!!!!@!!!!!!")
-            print(parameter.__dict__)
-            parameter.startDateTime = "" if parameter.startDateTime is None else str(mystring.date_to_iso(parameter.startDateTime))
-            parameter.endDateTime = "" if parameter.endDateTime is None else str(mystring.date_to_iso(parameter.endDateTime))
-            parameter.frame.to_pickle(
-                self.file_name(parameter, parameter.filename, suffix=".pkl")
-            )
+            if "startDateTime" in parameter.__dict__ and "endDateTime" in parameter.__dict__:
+                print("!!!!@!!!!!!")
+                print(parameter.__dict__)
+                parameter.startDateTime = "" if parameter.startDateTime is None else str(mystring.date_to_iso(parameter.startDateTime))
+                parameter.endDateTime = "" if parameter.endDateTime is None else str(mystring.date_to_iso(parameter.endDateTime))
+                parameter.frame.to_pickle(
+                    self.file_name(parameter, parameter.filename, suffix=".pkl")
+                )
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
@@ -41,7 +42,7 @@ class app(Logger):
     def result(self, result: RepoResultObject) -> bool:
         try:
             print("!!!!?!!!!!!")
-            print(parameter.__dict__)
+            print(result.__dict__)
             result.startDateTime = "" if result.startDateTime is None else str(mystring.date_to_iso(result.startDateTime))
             result.endDateTime = "" if result.endDateTime is None else str(mystring.date_to_iso(result.endDateTime))
             result.to_pickle(
