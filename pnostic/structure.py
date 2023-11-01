@@ -792,6 +792,19 @@ operation().run_procedure()
                 logy.send(">!?> 6")
                 logy.send(">!?> 6.5 : "+str(len(output)))
 
+                if len(output) == 0:# and notHollow:
+                    output = [RepoResultObject.newEmpty(
+                        projecttype=obj.path,
+                        projectname=obj.path,
+                        projecturl=None,
+                        qual_name=None,
+                        tool_name=runner.name(),
+                        stage=stage,
+                        ExceptionMsg=exceptionString,
+                        startDateTime=None,
+                        endDateTime=None
+                    )]
+
                 resultObject: RepoResultObject
                 for resultObject in output:
                     logy.send(">!?> 7")
@@ -815,19 +828,6 @@ operation().run_procedure()
             exceptionString = str(e)
             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             logy.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
-
-        if notHollow and len(output) == 0:
-            output = [RepoResultObject.newEmpty(
-                projecttype=obj.path,
-                projectname=obj.path,
-                projecturl=None,
-                qual_name=None,
-                tool_name=runner.name(),
-                stage=stage,
-                ExceptionMsg=exceptionString,
-                startDateTime=None,
-                endDateTime=None
-            )]
 
         if self.perScan:
             self.perScan()
