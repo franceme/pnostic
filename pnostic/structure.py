@@ -790,6 +790,7 @@ operation().run_procedure()
                 if not isinstance(output, list) and isinstance(output, list):
                     output = [output] 
                 logy.send(">!?> 6")
+                logy.send(">!?> 6.5 : "+len(output))
 
                 resultObject: RepoResultObject
                 for resultObject in output:
