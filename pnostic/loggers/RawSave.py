@@ -24,13 +24,23 @@ class app(Logger):
         return True
 
     def parameter(self, parameter: RepoObject) -> bool:
-        parameter.to_pickle(
-            self.file_name(parameter, parameter.filename, suffix=".pkl")
-        )
+        try:
+            parameter.startDateTime = "" if parameter.startTime is None else str(mystring.date_to_iso(parameter.startTime))
+            parameter.endTime = "" if parameter.endTime is None else str(mystring.date_to_iso(parameter.endTime))
+            parameter.frame.to_pickle(
+                self.file_name(parameter, parameter.filename, suffix=".pkl")
+            )
+        except Exception as e:
+            print(e)
         return True
 
     def result(self, result: RepoResultObject) -> bool:
-        result.to_pickle(
-            self.file_name(result, result.tool_name, suffix=".pkl")
-        )
+        try:
+            result.startDateTime = "" if result.startTime is None else str(mystring.date_to_iso(result.startTime))
+            result.endTime = "" if result.endTime is None else str(mystring.date_to_iso(result.endTime))
+            result.to_pickle(
+                self.file_name(result, result.tool_name, suffix=".pkl")
+            )
+        except Exception as e:
+            print(e)
         return True
