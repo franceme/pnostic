@@ -723,14 +723,14 @@ operation().run_procedure()
                 logy.send("␀ Starting For Loop")
                 logy.send(obj)
 
-                endTime=None
+                startTime,endTime=None,None
 
                 if obj.content is None:
                     logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path))
                     try:
-                        startTime:datetime.datetime = mystring.timestamp.now()
+                        startTime:datetime.datetime = mystring.current_date()
                         output = runner.scan(obj.path)
-                        endTime:datetime.datetime = mystring.timestamp.now()
+                        endTime:datetime.datetime = mystring.current_date()
                     except Exception as e:
                         exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                         self.loggerSet.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
@@ -739,9 +739,9 @@ operation().run_procedure()
                         logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path))
 
                         try:
-                            startTime:datetime.datetime = mystring.timestamp.now()
+                            startTime:datetime.datetime = mystring.current_date()
                             output = runner.scan(eph())
-                            endTime:datetime.datetime = mystring.timestamp.now()
+                            endTime:datetime.datetime = mystring.current_date()
                         except Exception as e:
                             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                             self.loggerSet.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
@@ -754,8 +754,8 @@ operation().run_procedure()
 
                 resultObject: RepoResultObject
                 for resultObject in output:
-                    resultObject.startDateTime = startTime
-                    resultObject.endDateTime = endTime
+                    resultObject.startDateTime = "" if startTime is None else str(mystring.date_to_iso(startTime))
+                    resultObject.endDateTime = "" if endTime is None else str(mystring.date_to_iso(endTime))
                     if stage:
                         resultObject.stage=stage
                     logy.send("␀ Starting Sending For Loop")
