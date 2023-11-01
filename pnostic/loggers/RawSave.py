@@ -25,6 +25,7 @@ class app(Logger):
 
     def parameter(self, parameter: RepoObject) -> bool:
         try:
+            print("!!!!@!!!!!!")
             parameter.startDateTime = "" if parameter.startTime is None else str(mystring.date_to_iso(parameter.startTime))
             parameter.endTime = "" if parameter.endTime is None else str(mystring.date_to_iso(parameter.endTime))
             parameter.frame.to_pickle(
@@ -36,6 +37,7 @@ class app(Logger):
 
     def result(self, result: RepoResultObject) -> bool:
         try:
+            print("!!!!?!!!!!!")
             result.startDateTime = "" if result.startTime is None else str(mystring.date_to_iso(result.startTime))
             result.endTime = "" if result.endTime is None else str(mystring.date_to_iso(result.endTime))
             result.to_pickle(
