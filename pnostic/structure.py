@@ -390,7 +390,7 @@ class Logger(CoreObject):
         print(self.file_size_limit_bytes())
         print("2.5")
         if file_size < self.file_size_limit_bytes():
-            print("3")
+            print("3^")
             return [file_path]
 
 
