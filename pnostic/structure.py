@@ -721,7 +721,15 @@ operation().run_procedure()
         try:
             with LoggerSet(self.loggerSet.loggers, stage="␃ Scanning {0} with {1}".format(obj.path, runner.name())) as logy:
                 logy.send("␀ Starting For Loop")
-                logy.send(obj)
+                try:
+                    logy.send(obj)
+                except Exception as e:
+                    exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                    msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
+                    self.loggerSet.emergency(msg)
+                    logy.send(msg)
+                    print(msg)
+
 
                 startTime,endTime=None,None
 
