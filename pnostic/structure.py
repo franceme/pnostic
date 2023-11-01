@@ -726,14 +726,16 @@ operation().run_procedure()
                 startTime,endTime=None,None
 
                 if obj.content is None:
-                    logy.send("␁ Started Scanning {0} {1}".format(obj.str_type, obj.path))
+                    logy.send("␁ Started Scanning {0} {1}".format(obj.str_type(), obj.path))
                     try:
                         startTime:datetime.datetime = mystring.current_date()
                         output = runner.scan(obj.path)
                         endTime:datetime.datetime = mystring.current_date()
+                        logy.send("␁ Succeeded in Scanning {0} {1}".format(obj.str_type(), obj.path))
                     except Exception as e:
                         exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                         self.loggerSet.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
+                        logy.send("␁ Failed in Scanning {0} {1}".format(obj.str_type(), obj.path))
                 else:
                     with ephfile("{0}_stub.py".format(runner.name()), obj.content) as eph:
                         logy.send("␁ Started Scanning {0} {1}".format(obj.str_type(), obj.path))
