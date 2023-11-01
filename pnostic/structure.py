@@ -740,15 +740,16 @@ operation().run_procedure()
                     logy.send("␁ Started Scanning {0} {1}".format(obj.str_type(), obj.path))
                     try:
                         logy.send(">!> 2")
-                        startTime:datetime.datetime = mystring.current_date()
+                        startTime = mystring.current_date()
                         logy.send(">!> 3")
                         output = runner.scan(obj.path)
                         logy.send(">!> 4")
-                        endTime:datetime.datetime = mystring.current_date()
+                        endTime = mystring.current_date()
                         logy.send(">!> 5")
                         logy.send("␁ Succeeded in Scanning {0} {1}".format(obj.str_type(), obj.path))
                     except Exception as e:
                         logy.send(">!> 6")
+                        logy.send(e)
                         exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                         msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
                         self.loggerSet.emergency(msg)
