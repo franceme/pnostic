@@ -21,6 +21,36 @@ class RepoSifting(object):
             **self._internal_staticKeyTypeMap()
         }
 
+    def __getstate__(self):
+        #https://realpython.com/python-pickle-module/
+        # Used for creating a pickle
+        new_attributes = {
+            "__reconvert__":[]
+        }
+
+        for key, value in self.__dict__.copy().items():
+            if isinstance(value, datetime.datetime):
+                new_attributes[key] = value.isoformat()
+                new_attributes["__reconvert__"] += [key]
+            else:
+                new_attributes[key] = value 
+
+        return new_attributes
+
+    def __setstate__(self, state):
+        #https://realpython.com/python-pickle-module/
+        # Used for loading a pickle
+        self.__dict__ = {}
+        for key, value in state.items():
+            if key in state["__reconvert__"]:
+                try:
+                    self.__dict__[key] = datetime.datetime.fromisoformat(value)
+                except:
+                    self.__dict__[key] = value
+                    pass
+            else:
+                self.__dict__[key] = value
+
     @staticmethod
     @abstractmethod
     def _internal_staticKeyTypeMap() -> Dict[str, type]:
@@ -44,19 +74,9 @@ class RepoSifting(object):
         return json.dumps(self.toMap())
 
     @property
-    def base64JsonStringExpand(self):
-        import json
-        return mystring.string.of(json.dumps(self.toMap())).tobase64(prefix=True)
-
     def base64JsonString(self):
         import json
-        output = None
-        try:
-            output = mystring.string.of(json.dumps(self.toMap())).tobase64(prefix=True)
-        except Exception as e:
-            print(e)
-            print("^^^^^^^^^^^^^^^")
-        return output
+        return mystring.string.of(json.dumps(self.toMap())).tobase64(prefix=True)
 
     @property
     def csvString(self):
@@ -438,17 +458,16 @@ class LoggerSet(object):
 
     def start(self, stage:mystring.string):
         for logger in self.loggers:
-            if self.log_debug_messages:logger.send(":>␋ sending to logger")
+            if self.log_debug_messages:logger.send(":>␋ sending to logger {0}".format(logger.name()))
             logger.start(self.stage or stage)
-            if self.log_debug_messages:logger.send(":>␋ ^^^^^ sending to logger")
+            if self.log_debug_messages:logger.send(":>␋ ^^^^^ sending to {0}".format(logger.name()))
         return self
 
-    def send(self, msg:Union[mystring.string, RepoObject, RepoResultObject], is_debug:bool=False)->bool:
-        if is_debug and self.log_debug_messages or not is_debug:
-            for logger in self.loggers:
-                if self.log_debug_messages:logger.send(":>␈ sending to logger")
-                logger.send(msg)
-                if self.log_debug_messages:logger.send(":>␈ end sending to logger")
+    def send(self, msg:Union[mystring.string, RepoObject, RepoResultObject])->bool:
+        for logger in self.loggers:
+            if self.log_debug_messages:logger.send(":>␈ sending to {0}".format(logger.name()))
+            logger.send(msg)
+            if self.log_debug_messages:logger.send(":>␈ end sending to {0}".format(logger.name()))
         return self
 
     def emergency(self, msg:mystring.string)->bool:
@@ -457,9 +476,9 @@ class LoggerSet(object):
 
     def stop(self):
         for logger in self.loggers:
-            if self.log_debug_messages:logger.send(":>␇ sending to logger")
+            if self.log_debug_messages:logger.send(":>␇ sending to {0}".format(logger.name()))
             logger.stop()
-            if self.log_debug_messages:logger.send(":>␇ end sending to logger")
+            if self.log_debug_messages:logger.send(":>␇ end sending to {0}".format(logger.name()))
         return self
 
     def __enter__(self, stage:Union[mystring.string, None]=None):

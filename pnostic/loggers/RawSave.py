@@ -24,13 +24,13 @@ class app(Logger):
         return True
 
     def parameter(self, parameter: RepoObject) -> bool:
-        parameter.frame.to_pickle(
+        parameter.to_pickle(
             self.file_name(parameter, parameter.filename, suffix=".pkl")
         )
         return True
 
     def result(self, result: RepoResultObject) -> bool:
-        result.frame.to_pickle(
+        result.to_pickle(
             self.file_name(result, result.tool_name, suffix=".pkl")
         )
         return True
