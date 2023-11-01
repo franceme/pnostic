@@ -736,28 +736,41 @@ operation().run_procedure()
                 startTime,endTime=None,None
 
                 if obj.content is None:
+                    logy.send(">!> 1")
                     logy.send("␁ Started Scanning {0} {1}".format(obj.str_type(), obj.path))
                     try:
+                        logy.send(">!> 2")
                         startTime:datetime.datetime = mystring.current_date()
+                        logy.send(">!> 3")
                         output = runner.scan(obj.path)
+                        logy.send(">!> 4")
                         endTime:datetime.datetime = mystring.current_date()
+                        logy.send(">!> 5")
                         logy.send("␁ Succeeded in Scanning {0} {1}".format(obj.str_type(), obj.path))
                     except Exception as e:
+                        logy.send(">!> 6")
                         exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                         msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
                         self.loggerSet.emergency(msg)
                         logy.send(msg)
                         print(msg)
                 else:
+                    logy.send(">?> 1")
                     with ephfile("{0}_stub.py".format(runner.name()), obj.content) as eph:
+                        logy.send(">?> 2")
                         logy.send("␁ Started Scanning {0} {1}".format(obj.str_type(), obj.path))
+                        logy.send(">?> 3")
 
                         try:
                             startTime:datetime.datetime = mystring.current_date()
+                            logy.send(">?> 4")
                             output = runner.scan(eph())
+                            logy.send(">?> 5")
                             endTime:datetime.datetime = mystring.current_date()
+                            logy.send(">?> 6")
                             logy.send("␁ Succeeded in Scanning {0} {1}".format(obj.str_type(), obj.path))
                         except Exception as e:
+                            logy.send(">?> 7")
                             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                             msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
                             self.loggerSet.emergency(msg)
@@ -766,15 +779,20 @@ operation().run_procedure()
 
                         logy.send("␁ Finished Scanning {0} {1}".format(obj.str_type(), obj.path))
 
+                logy.send(">!?> 4")
                 if endTime is None:
                     endTime = startTime
 
+                logy.send(">!?> 5")
                 if not isinstance(output, list) and isinstance(output, list):
                     output = [output] 
+                logy.send(">!?> 6")
 
                 resultObject: RepoResultObject
                 for resultObject in output:
+                    logy.send(">!?> 7")
                     try:
+                        logy.send(">!?> 8")
                         resultObject.startDateTime = "" if startTime is None else str(mystring.date_to_iso(startTime))
                         resultObject.endDateTime = "" if endTime is None else str(mystring.date_to_iso(endTime))
                         if stage:
