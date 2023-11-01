@@ -122,7 +122,6 @@ class RepoObject(RepoSifting):
     def is_dir(self):
         return os.path.isdir(self.path)
 
-    @staticmethod
     def str_type(self):
         return "dir" if self.is_dir else "file"
 
