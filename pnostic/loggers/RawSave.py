@@ -1,5 +1,5 @@
-from typing import Tuple, List, Dict, Union, os,sys
-import mystring
+from typing import Tuple, List, Dict, Union
+import mystring, os,sys
 from pnostic.structure import Logger, RepoResultObject, RepoObject, RepoSifting
 import pnostic.utils as utils
 
