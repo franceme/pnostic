@@ -740,7 +740,7 @@ operation().run_procedure()
                     logy.send("␁ Started Scanning {0} {1}".format(obj.str_type(), obj.path))
                     try:
                         logy.send(">!> 2")
-                        help(mystring.current_date)
+                        print(mystring.__dict__)
                         startTime = mystring.current_date()
                         logy.send(">!> 3")
                         output = runner.scan(obj.path)
