@@ -45,10 +45,13 @@ class app(Logger):
             print(result.__dict__)
             result.startDateTime = "" if result.startDateTime is None else (result.startDateTime if isinstance(result.startDateTime,str) else str(mystring.date_to_iso(result.startDateTime)))
             result.endDateTime = "" if result.endDateTime is None else (result.endDateTime if isinstance(result.endDateTime,str) else str(mystring.date_to_iso(result.endDateTime)))
+            print(":::::::::")
             result.frame.to_pickle(
                 self.file_name(result, result.tool_name, suffix=".pkl")
             )
+            print(":::::::::>><<<")
         except Exception as e:
+            print(e)
             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
             print(msg)
