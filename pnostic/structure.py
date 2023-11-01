@@ -724,11 +724,13 @@ operation().run_procedure()
                 try:
                     logy.send(obj)
                 except Exception as e:
+                    logy.send("Entering")
                     exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                     msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
                     self.loggerSet.emergency(msg)
                     logy.send(msg)
                     print(msg)
+                logy.send("After Sub Send")
 
 
                 startTime,endTime=None,None
