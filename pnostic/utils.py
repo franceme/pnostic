@@ -1,4 +1,4 @@
-import datetime
+import datetime, os,sys
 
 
 def fancy_date(date: datetime.datetime) -> str:
@@ -28,52 +28,60 @@ def custom_msg(msg, color:bcolors):
     )
 
 def convert_size_to_bytes(size_str):
-    #https://stackoverflow.com/questions/44307480/convert-size-notation-with-units-100kb-32mb-to-number-of-bytes-in-python
-    """Convert human filesizes to bytes.
+    try:
+        print("a)1")
+        #https://stackoverflow.com/questions/44307480/convert-size-notation-with-units-100kb-32mb-to-number-of-bytes-in-python
+        """Convert human filesizes to bytes.
 
-    Special cases:
-    - singular units, e.g., "1 byte"
-    - byte vs b
-    - yottabytes, zetabytes, etc.
-    - with & without spaces between & around units.
-    - floats ("5.2 mb")
+        Special cases:
+        - singular units, e.g., "1 byte"
+        - byte vs b
+        - yottabytes, zetabytes, etc.
+        - with & without spaces between & around units.
+        - floats ("5.2 mb")
 
-    To reverse this, see hurry.filesize or the Django filesizeformat template
-    filter.
+        To reverse this, see hurry.filesize or the Django filesizeformat template
+        filter.
 
-    :param size_str: A human-readable string representing a file size, e.g.,
-    "22 megabytes".
-    :return: The number of bytes represented by the string.
-    """
-    multipliers = {
-        'kilobyte':  1024,
-        'megabyte':  1024 ** 2,
-        'gigabyte':  1024 ** 3,
-        'terabyte':  1024 ** 4,
-        'petabyte':  1024 ** 5,
-        'exabyte':   1024 ** 6,
-        'zetabyte':  1024 ** 7,
-        'yottabyte': 1024 ** 8,
-        'kb': 1024,
-        'mb': 1024**2,
-        'gb': 1024**3,
-        'tb': 1024**4,
-        'pb': 1024**5,
-        'eb': 1024**6,
-        'zb': 1024**7,
-        'yb': 1024**8,
-    }
+        :param size_str: A human-readable string representing a file size, e.g.,
+        "22 megabytes".
+        :return: The number of bytes represented by the string.
+        """
+        multipliers = {
+            'kilobyte':  1024,
+            'megabyte':  1024 ** 2,
+            'gigabyte':  1024 ** 3,
+            'terabyte':  1024 ** 4,
+            'petabyte':  1024 ** 5,
+            'exabyte':   1024 ** 6,
+            'zetabyte':  1024 ** 7,
+            'yottabyte': 1024 ** 8,
+            'kb': 1024,
+            'mb': 1024**2,
+            'gb': 1024**3,
+            'tb': 1024**4,
+            'pb': 1024**5,
+            'eb': 1024**6,
+            'zb': 1024**7,
+            'yb': 1024**8,
+        }
 
-    for suffix in multipliers:
-        size_str = size_str.lower().strip().strip('s')
-        if size_str.lower().endswith(suffix):
-            return int(float(size_str[0:-len(suffix)]) * multipliers[suffix])
-    else:
-        if size_str.endswith('b'):
-            size_str = size_str[0:-1]
-        elif size_str.endswith('byte'):
-            size_str = size_str[0:-4]
-    return int(size_str)
+        for suffix in multipliers:
+            size_str = size_str.lower().strip().strip('s')
+            if size_str.lower().endswith(suffix):
+                return int(float(size_str[0:-len(suffix)]) * multipliers[suffix])
+        else:
+            if size_str.endswith('b'):
+                size_str = size_str[0:-1]
+            elif size_str.endswith('byte'):
+                size_str = size_str[0:-4]
+        print("X)B")
+        return int(size_str)
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
+        print(msg)
+        return float("inf")
 
 def clean_operators():
 	import shutil
