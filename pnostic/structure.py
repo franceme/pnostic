@@ -384,17 +384,29 @@ class Logger(CoreObject):
         return float('inf')
 
     def break_file_down(self, file_path:str)->List[str]:
+        print("1")
         file_size = os.path.getsize(file_path)
+        print("2")
         if file_size < self.file_size_limit_bytes:
+            print("3")
             return [file_path]
 
+
+        print("3")
         if not file_path.endswith(".zip"):
             import hugg
+            print("4")
             zyp_container = hugg.zyp(file_path+".zip")
+            print("5")
             zyp_container[file_path] = file_path
+            print("6")
             file_path = zyp_container.location
-
-        return splych.file_split(file_path, chunk_size=self.file_size_limit_bytes, delete_original=True)
+            print("7")
+        
+        files =  splych.file_split(file_path, chunk_size=self.file_size_limit_bytes, delete_original=True)
+        print("8")
+        print(files)
+        return files
 
     def file_name(self, result:RepoSifting, extraString:str='', prefix:str='', suffix:str=".txt", newFile:bool=True)->str:
         current_file = mystring.string.of("{0}_{1}_{2}_{3}".format(
