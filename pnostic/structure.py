@@ -9,7 +9,7 @@ except:
 
 class RepoSifting(object):
     def __init__(self):
-        self.uuid = mystring.string.of(str(uuid.uuid4()))
+        self.uuid = ""
         self.stage = None
         self.startDateTime = ""
         self.endDateTime = ""
@@ -587,6 +587,7 @@ operation().run_procedure()
 # or operation()()
     """
     def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger]=[], enveloperset:List[Envelop]=[], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False):
+        self.run_uuid = mystring.string.of(str(uuid.uuid4()))
         self.fileProviders = fileProviders
         self.runners = runners
 
@@ -618,6 +619,7 @@ operation().run_procedure()
     def RepoObjects(self) -> List[RepoObject]:
         for fileProvider in self.fileProviders:
             for RepoObj in fileProvider.RepoObjects:
+                RepoObj.uuid = mystring.string.of(str(uuid.uuid4()))
                 self.envelopSet.per_next_repo_obj(RepoObj)
                 yield RepoObj
 
@@ -663,7 +665,7 @@ operation().run_procedure()
         return lambda runner:RunnerProcedure(runner=runner, loggerSet=self.loggerSet, scanr=self.scan)
 
     def process(self, isAliveMin:int=None):
-        with LoggerSet(self.loggerSet.loggers, stage=":>. Starting the overall process") as logy:
+        with LoggerSet(self.loggerSet.loggers, stage=":>. Starting the overall process := {0}".format(self.uuid)) as logy:
             def alive(min:int=None, loggerSet=None):
                 import time
                 while True:
@@ -683,7 +685,7 @@ operation().run_procedure()
                 logy.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
             finally:
                 logy.send(":> Closing the process")
-        logy.send("Exiting the Scan")
+        logy.send("Exiting the Scan := {0}".format(self.uuid))
         sys.exit(0)
 
     def __call__(self):
@@ -726,7 +728,7 @@ operation().run_procedure()
         output:List[RepoResultObject] = []
 
         try:
-            with LoggerSet(self.loggerSet.loggers, stage="␃ Scanning {0} with {1}".format(obj.path, runner.name())) as logy:
+            with LoggerSet(self.loggerSet.loggers, stage="␃ Scanning {0} with {1} in procedure := [{2}] as run := [{3}]".format(obj.path, runner.name(), self.uuid, obj.uuid)) as logy:
                 logy.send("␀ Starting For Loop")
                 try:
                     logy.send(obj)
@@ -787,6 +789,7 @@ operation().run_procedure()
                     try:
                         resultObject.startDateTime = "" if startTime is None else str(mystring.date_to_iso(startTime))
                         resultObject.endDateTime = "" if endTime is None else str(mystring.date_to_iso(endTime))
+                        resultObject.uuid = obj.uuid
                         if stage:
                             resultObject.stage=stage
                         logy.send(resultObject)
