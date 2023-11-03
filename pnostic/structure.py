@@ -587,7 +587,7 @@ operation().run_procedure()
 # or operation()()
     """
     def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger]=[], enveloperset:List[Envelop]=[], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False):
-        self.run_uuid = mystring.string.of(str(uuid.uuid4()))
+        self.uuid = mystring.string.of(str(uuid.uuid4()))
         self.fileProviders = fileProviders
         self.runners = runners
 
