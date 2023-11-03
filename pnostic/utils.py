@@ -29,7 +29,6 @@ def custom_msg(msg, color:bcolors):
 
 def convert_size_to_bytes(size_str):
     try:
-        print("a)1")
         #https://stackoverflow.com/questions/44307480/convert-size-notation-with-units-100kb-32mb-to-number-of-bytes-in-python
         """Convert human filesizes to bytes.
 
@@ -75,7 +74,6 @@ def convert_size_to_bytes(size_str):
                 size_str = size_str[0:-1]
             elif size_str.endswith('byte'):
                 size_str = size_str[0:-4]
-        print("X)B")
         return int(size_str)
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -85,7 +83,7 @@ def convert_size_to_bytes(size_str):
 
 def clean_operators():
 	import shutil
-	for x in ["runners","loggers","providers"]:
+	for x in ["runners","loggers","providers","envelopers"]:
 		try:
 			shutil.rmtree("{0}/".format(x))
 		except:
