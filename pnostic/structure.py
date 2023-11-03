@@ -292,7 +292,11 @@ class RepoResultObject(RepoSifting):
 class CoreObject(ABC):
     def __init__(self):
         self.imports = []
+        self.logger_set = None
         import sys;self.executable = sys.executable
+
+    def set_logger_set(self, logger_set):
+        self.logger_set = logger_set
 
     def installImports(self) -> bool:
         if not hasattr(self, "imports"):
