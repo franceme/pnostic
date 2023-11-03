@@ -26,7 +26,7 @@ class app(Logger):
     def parameter(self, parameter: RepoObject) -> bool:
         try:
             parameter.frame.to_pickle(
-                self.file_name(parameter, parameter.filename, suffix=".pkl")
+                self.file_name(parameter, parameter.path, suffix=".pkl")
             )
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
