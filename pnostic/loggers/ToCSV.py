@@ -1,4 +1,4 @@
-import os, mystring
+__init__import os, mystring
 from typing import List
 
 from pnostic.structure import Logger, RepoResultObject, RepoObject

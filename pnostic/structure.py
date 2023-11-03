@@ -11,6 +11,8 @@ class RepoSifting(object):
     def __init__(self):
         self.uuid = mystring.string.of(str(uuid.uuid4()))
         self.stage = None
+        self.startDateTime = ""
+        self.endDateTime = ""
 
     def staticKeyTypeMap(self) -> Dict[str, type]:
         return {
@@ -20,6 +22,12 @@ class RepoSifting(object):
             },
             **self._internal_staticKeyTypeMap()
         }
+
+    def __setattr__(self, variable_name, variable_value):
+        if variable_name in ["startDateTime","endDateTime"] and isinstance(variable_value, datetime.datetime):
+            super().__setattr__(variable_name, str(mystring.date_to_iso(variable_value)))
+        else:
+            super().__setattr__(variable_name, variable_value)
 
     def __getstate__(self):
         #https://realpython.com/python-pickle-module/
