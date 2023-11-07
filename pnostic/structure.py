@@ -142,7 +142,7 @@ class RepoObject(RepoSifting):
             "hasVuln": bool,
             "cryVulnId": int,
             "langPattern": mystring.string,
-            "file_scan_lambda": Callable[str, bool]
+            "file_scan_lambda": Callable
         }
 
     def updateContent(self, newContent:mystring.string):
