@@ -30,6 +30,7 @@ class RepoSifting(object):
             super().__setattr__(variable_name, variable_value)
 
     def __getstate__(self):
+        import inspect
         #https://realpython.com/python-pickle-module/
         # Used for creating a pickle
         new_attributes = {
@@ -39,6 +40,9 @@ class RepoSifting(object):
         for key, value in self.__dict__.copy().items():
             if isinstance(value, datetime.datetime):
                 new_attributes[key] = value.isoformat()
+                new_attributes["__reconvert__"] += [key]
+            elif key == "file_scan_lambda":
+                new_attributes[key] = inspect.getsource(value)
                 new_attributes["__reconvert__"] += [key]
             else:
                 new_attributes[key] = value 
@@ -52,7 +56,10 @@ class RepoSifting(object):
         for key, value in state.items():
             if key in state["__reconvert__"]:
                 try:
-                    self.__dict__[key] = datetime.datetime.fromisoformat(value)
+                    if key == "file_scan_lambda":
+                        self.__dict__[key] = eval(value)
+                    elif key in ["startDateTime","endDateTime"]:
+                        self.__dict__[key] = datetime.datetime.fromisoformat(value)
                 except:
                     self.__dict__[key] = value
                     pass
