@@ -1,6 +1,8 @@
 from typing import List, Dict, Union, Callable
 from abc import ABC, abstractmethod
-import mystring, uuid, threading, os, sys, splych, datetime
+from dataclasses import dataclass, field
+import mystring, uuid, threading, os, sys, splych, datetime, threading, asyncio, time
+from pnostic.seclusion import core as core_seclusion
 
 try: #Python2
     import __builtin__ as builtins
@@ -121,7 +123,6 @@ class RepoSifting(object):
             writer.writerow(value)
         return output.getvalue()
 
-
 class RepoObject(RepoSifting):
     def __init__(self, path: mystring.string, hash: mystring.string, content: mystring.string, hasVuln: bool, cryVulnId: int, langPattern: mystring.string = None, file_scan_lambda: mystring.string = None):
         super().__init__()
@@ -163,7 +164,6 @@ class RepoObject(RepoSifting):
     @property
     def contentb64(self):
         return self._content.tobase64()
-
 
 class RepoResultObject(RepoSifting):
     def __init__(self, projecttype: str, projectname: str, projecturl: str, qual_name: str, tool_name: str, Program_Lines: int, Total_Lines: int, Number_of_Imports: int, MCC: int, IsVuln: bool, ruleID: int, cryptolationID: int, CWEId: int, Message: str, Exception:str, llmPrompt:str, llmResponse:str, extraToolInfo:str, fileContent:str, Line: int, correctedCode:str, severity: str=None, confidence: str=None, context: str=None, TP: int=0, FP: int=0, TN: int=0, FN: int=0, dateTimeFormat:str="ISO 8601", startDateTime:str=None, endDateTime:str=None, stage:str=None):
@@ -295,7 +295,6 @@ class RepoResultObject(RepoSifting):
 
         return RepoResultObject(**info)
 
-
 class CoreObject(ABC):
     def __init__(self):
         self.imports = []
@@ -328,7 +327,6 @@ class CoreObject(ABC):
     @abstractmethod
     def clean(self) -> bool:
         pass
-
 
 class Runner(CoreObject):
     @abstractmethod
@@ -456,12 +454,12 @@ class Logger(CoreObject):
         self.send(":>␌ Exiting the stage: {0}".format(self.stage))
         return self
 
-
 class LoggerSet(object):
-    def __init__(self, loggers=[], stage:str=None,log_debug_messages=False):
+    def __init__(self, loggers=[], stage:str=None,log_debug_messages=False, logger_queue_lock=threading.Lock()):
         self.loggers = loggers
         self.stage = stage
         self.log_debug_messages = log_debug_messages
+        self.logger_queue_lock = logger_queue_lock
 
     def __len__(self):
         return len(self.loggers)
@@ -471,32 +469,37 @@ class LoggerSet(object):
 
     def set_prefix(self, general_prefix:mystring.string):
         for logger in self.loggers:
-            logger.general_prefix = general_prefix
+            with self.logger_queue_lock:
+                logger.general_prefix = general_prefix
         return self
 
     def start(self, stage:mystring.string):
         for logger in self.loggers:
-            if self.log_debug_messages:logger.send(":>␋ sending to logger {0}".format(logger.name()))
-            logger.start(self.stage or stage)
-            if self.log_debug_messages:logger.send(":>␋ ^^^^^ sending to {0}".format(logger.name()))
+            with self.logger_queue_lock:
+                if self.log_debug_messages:logger.send(":>␋ sending to logger {0}".format(logger.name()))
+                logger.start(self.stage or stage)
+                if self.log_debug_messages:logger.send(":>␋ ^^^^^ sending to {0}".format(logger.name()))
         return self
 
     def send(self, msg:Union[mystring.string, RepoObject, RepoResultObject])->bool:
         for logger in self.loggers:
-            if self.log_debug_messages:logger.send(":>␈ sending to {0}".format(logger.name()))
-            logger.send(msg)
-            if self.log_debug_messages:logger.send(":>␈ end sending to {0}".format(logger.name()))
+            with self.logger_queue_lock:
+                if self.log_debug_messages:logger.send(":>␈ sending to {0}".format(logger.name()))
+                logger.send(msg)
+                if self.log_debug_messages:logger.send(":>␈ end sending to {0}".format(logger.name()))
         return self
 
     def emergency(self, msg:mystring.string)->bool:
         for logger in self.loggers:
-            logger.emergency(msg)
+            with self.logger_queue_lock:
+                logger.emergency(msg)
 
     def stop(self):
         for logger in self.loggers:
-            if self.log_debug_messages:logger.send(":>␇ sending to {0}".format(logger.name()))
-            logger.stop()
-            if self.log_debug_messages:logger.send(":>␇ end sending to {0}".format(logger.name()))
+            with self.logger_queue_lock:
+                if self.log_debug_messages:logger.send(":>␇ sending to {0}".format(logger.name()))
+                logger.stop()
+                if self.log_debug_messages:logger.send(":>␇ end sending to {0}".format(logger.name()))
         return self
 
     def __enter__(self, stage:Union[mystring.string, None]=None):
@@ -507,13 +510,36 @@ class LoggerSet(object):
     def __exit__(self, _type=None, value=None, traceback=None):
         self.stop()
 
-
 class RepoObjectProvider(CoreObject):
     @property
     @abstractmethod
     def RepoObjects(self) -> List[RepoObject]:
         pass
 
+@dataclass
+class SeclusionEnvOutput:
+    start_date_time:str
+    scan_object:RepoObject
+    result:List[RepoResultObject]
+    end_date_time:str
+
+class SeclusionEnv(CoreObject):
+    def __init__(self, working_dir:str, user:str="root"):
+        super().__init__()
+        self.working_dir = working_dir
+        self.user = user
+
+    @abstractmethod
+    def python_packages(self,packages:List[str]) -> bool:
+        pass
+
+    @abstractmethod
+    def setup_files(self,files:List[str]) -> bool:
+        pass
+
+    @abstractmethod
+    def process(self, obj:RepoObject, runner:Runner)->SeclusionEnvOutput:
+        pass
 
 class contextString(object):
     def __init__(self, lines=List[str], vulnerableLine:str=None, imports:List[str] = []):
@@ -567,6 +593,21 @@ class contextString(object):
 
         return '\n'.join(output)
 
+class ThreadWithReturnValue(threading.Thread):
+    #https://stackoverflow.com/questions/6893968/how-to-get-the-return-value-from-a-thread
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs={}, Verbose=None):
+        threading.Thread.__init__(self, group, target, name, args, kwargs)
+        self._return = None
+
+    def run(self):
+        if self._target is not None:
+            self._return = self._target(*self._args,
+                                                **self._kwargs)
+    def join(self, *args):
+        threading.Thread.join(self, *args)
+        return self._return
+
 
 class GenProcedure(ABC):
     """
@@ -591,13 +632,13 @@ class operation(structure.GenProcedure):
 			for runnerSvr in self.runners:
 				with self.getRunnerProcedure(runnerSvr) as runner:
 					for fileObj in self.RepoObjects:
-						firstScanResults: List[RepoResultObject] = self.scan(fileObj, runner())
+						firstScanResults: List[RepoResultObject] = self.process(fileObj, runner())
 		return
 
 operation().run_procedure()
 # or operation()()
     """
-    def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger]=[], enveloperset:List[Envelop]=[], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False):
+    def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger]=[], enveloperset:List[Envelop]=[], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False, thread_count:int=1, use_results=False, seclusion_env:SeclusionEnv=core_seclusion, seclusion_env_necessary_files=[]):
         self.uuid = mystring.string.of(str(uuid.uuid4()))
         self.fileProviders = fileProviders
         self.runners = runners
@@ -605,26 +646,116 @@ operation().run_procedure()
         self.perScan = perScan
         self.stage = None
         #https://superfastpython.com/asyncio-async-with/
-        self.loggerSet = LoggerSet(log_debug_messages = log_debug_messages)
+        self.loggerSetLock = threading.Lock()
+        self.loggerSet = LoggerSet(log_debug_messages = log_debug_messages,logger_queue_lock=self.loggerSetLock)
         for logger in loggersset:
             self.loggerSet.add(logger)
-        
+
         self.envelopSet = EnvelopSet()
         for envelop in enveloperset:
             self.envelopSet.add(envelop)
 
-        for big_list in (fileProviders + runners + loggersset + enveloperset):
+        self.assets = ["pnostic"]
+
+        for big_list in (fileProviders + runners + loggersset + enveloperset + seclusion_env):
             if isinstance(big_list, list):
                 for core in big_list:
                     core.installImports()
+                    self.assets += [core]
             else:
                 big_list.installImports()
-        
+                self.assets += [big_list]
+
         if general_prefix:
             self.loggerSet.set_prefix(general_prefix)
 
+        self.thread_count = thread_count
+        self.thread_mgr = self.ThreadManager(max_threads=self.thread_count)
+
+        self.use_results = use_results
+
+        self.seclusion_env = seclusion_env
+
+        assets_packages = []
+        for asset in self.assets:
+            assets_packages += asset.imports
+        self.seclusion_env.python_packages(assets_packages)
+        self.seclusion_env.setup_files(seclusion_env_necessary_files)
+
     def log(self, msg:Union[mystring.string, RepoObject, RepoResultObject]):
         self.loggerSet.send(msg)
+
+    class ThreadManager:
+        def __init__(self, max_threads, use_results=False):
+            self.max_threads = max_threads
+            self.current_threads = []
+            self.backup_threads = []
+            self.lock = threading.Lock()
+
+            self.thread_queue_completed_lock = threading.Lock()
+            self.thread_queue_completed = True
+
+            self.started_watching = False
+
+            self.completed_threads_lock = threading.Lock()
+            self.completed_threads = {}
+            self.use_results = use_results
+
+        @property
+        def is_completed(self):
+            with self.thread_queue_completed_lock:
+                return self.thread_queue_completed
+
+        def wait_until_completed(self):
+            while not self.is_completed:
+                yield False
+            return True
+
+        def result_of_thread(self, thread_id, check_every_x_sec=10):
+            while True:
+                with self.completed_threads_lock:
+                    if thread_id in self.completed_threads:
+                        return self.completed_threads[thread_id]
+                time.sleep(check_every_x_sec)
+
+        def add_thread(self, target_function, args=()):
+            thread = ThreadWithReturnValue(target=target_function, args=args)
+
+            with self.lock:
+                if len(self.current_threads) < self.max_threads:
+                    self.current_threads.append(thread)
+                    thread.start()
+                    self.thread_completed = False
+                else:
+                    self.backup_threads.append(thread)
+                
+                if not self.started_watching:
+                    self.started_watching = True
+                    asyncio.create_task(self.monitor_threads())
+            
+            return thread.native_id
+
+        def check_completed_threads(self):
+            with self.lock:
+                completed_threads = [thread for thread in self.current_threads if not thread.is_alive()]
+
+                for thread in completed_threads:
+                    self.current_threads.remove(thread)
+                    with self.completed_threads_lock:
+                        self.completed_threads[thread.native_id] = True if not self.use_results else thread._return
+
+                    if self.backup_threads:
+                        new_thread = self.backup_threads.pop(0)
+                        self.current_threads.append(new_thread)
+                        new_thread.start()
+
+            with self.thread_queue_completed_lock:
+                self.thread_queue_completed = len(self.current_threads) == 0
+
+        async def monitor_threads(self):
+            while not self.is_completed:
+                await asyncio.sleep(1)  # Adjust the sleep interval as needed
+                self.check_completed_threads()
 
     @property
     def RepoObjects(self) -> List[RepoObject]:
@@ -691,8 +822,11 @@ operation().run_procedure()
             try:
                 logy.send(":> Starting the procedure")
                 self.run_procedure()
+                while not self.thread_mgr.wait_until_completed():
+                    time.sleep(10)
+
             except Exception as e:
-                exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                _, _, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 logy.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
             finally:
                 logy.send(":> Closing the process")
@@ -706,11 +840,18 @@ operation().run_procedure()
     def run_procedure(self):
         pass
 
-    def scan(self, repoObj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False)-> List[RepoResultObject]:
+    def scan(self, obj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False, wait_for_results=False)->List[RepoResultObject]:
+        thread_id = self.thread_mgr.add_thread(self.scan_thread, args=(obj, runner, stage, notHollow))
+        if wait_for_results:
+            return self.thread_mgr.result_of_thread(thread_id=thread_id)
+        else:
+            return []
+
+    def scan_thread(self, repoObj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False)-> List[RepoResultObject]:
         self.envelopSet.per_repo_obj_scan(repoObj, runner)
         output:List[RepoResultObject] = []
         if repoObj.is_dir and repoObj.file_scan_lambda is not None:
-            for root, dirs, files in os.walk(repoObj.path):
+            for root, _, files in os.walk(repoObj.path):
                 for file in files:
                     full_file_path = os.path.join(root, file)
                     if repoObj.file_scan_lambda(full_file_path):
@@ -727,7 +868,7 @@ operation().run_procedure()
         else:
             output = self.scanObj(obj = repoObj, runner = runner, stage = stage, notHollow = notHollow)
         
-        for RepoResultObj in output:
+        for repoObj in output:
             self.envelopSet.per_repo_obj_scan_result(repoObj, runner)
         
         return output
@@ -750,30 +891,10 @@ operation().run_procedure()
                     logy.send(msg)
 
 
-                startTime,endTime=None,None
-
-                if obj.content is None:
-                    try:
-                        startTime = mystring.current_date()
-                        output = runner.scan(obj.path)
-                        endTime = mystring.current_date()
-                    except Exception as e:
-                        exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                        msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
-                        self.loggerSet.emergency(msg)
-                        logy.send(msg)
-                else:
-                    with ephfile("{0}_stub.py".format(runner.name()), obj.content) as eph:
-
-                        try:
-                            startTime:datetime.datetime = mystring.current_date()
-                            output = runner.scan(eph())
-                            endTime:datetime.datetime = mystring.current_date()
-                        except Exception as e:
-                            exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                            msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
-                            self.loggerSet.emergency(msg)
-                            logy.send(msg)
+                execution_output = self.seclusion_env(obj, runner)
+                startTime=execution_output.start_date_time
+                endTime=execution_output.end_date_time
+                output =execution_output.result
 
                 logy.send("␁ Finished Scanning {0} {1}".format(obj.str_type(), obj.path))
                 if endTime is None:
@@ -804,6 +925,8 @@ operation().run_procedure()
                         if stage:
                             resultObject.stage=stage
                         logy.send(resultObject)
+                        if resultObject.ExceptionMsg:
+                            self.loggerSet.emergency(resultObject.ExceptionMsg)
                     except Exception as e:
                         exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                         msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
@@ -818,3 +941,25 @@ operation().run_procedure()
         if self.perScan:
             self.perScan()
         return output
+
+    def core_scan(path_to_dir_or_file:str):
+        output = {
+            "startDateTime":None,
+            "path":path_to_dir_or_file,
+            "result":None,
+            "endDateTime":None,
+        }
+        path or file
+        startTime,endTime=None,None
+
+        with ephfile("{0}_stub.py".format(runner.name()), obj.content) as eph:
+
+            try:
+                startTime:datetime.datetime = mystring.current_date()
+                output = runner.scan(eph())
+                endTime:datetime.datetime = mystring.current_date()
+            except Exception as e:
+                exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
+                self.loggerSet.emergency(msg)
+                logy.send(msg)
