@@ -81,10 +81,22 @@ def convert_size_to_bytes(size_str):
         print(msg)
         return float("inf")
 
-def clean_operators():
-	import shutil
-	for x in ["runners","loggers","providers","envelopers"]:
-		try:
-			shutil.rmtree("{0}/".format(x))
-		except:
-			pass
+class clean_op_env(object):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def clean_operators():
+        import shutil
+        for x in ["runners","loggers","providers","envelopers","seclusion"]:
+            try:
+                shutil.rmtree("{0}/".format(x))
+            except:
+                pass
+
+    def __enter__(self):
+        clean_op_env.clean_operators()
+        return self
+
+    def __exit__(self,a=None,b=None,c=None):
+        clean_op_env.clean_operators()
