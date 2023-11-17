@@ -31,31 +31,55 @@ class app(SeclusionEnv):
         self.total_files.extend(files)
         return True
 
+    def __py_script_contents(self):
+        return """#!/usr/bin/env python3
+import sys,os
+
+from typing import List
+import mystring
+from pnostic.structure import RepoResultObject, Runner
+
+app = {runner.name()}.app({runner.initialization_string()})
+
+results = app.scan(xxx)
+
+
+write_results_to_file(results, "file_name")
+"""
+
     def process(self, obj:RepoObject, runner:Runner)->SeclusionEnvOutput:
         from sdock import marina
 
-        with marina.titan(image=self.docker_image,working_dir=self.working_dir,name=self.docker_name) as ship:
-            with ship.storage() as store:
-                store.upload(local_cryptolation, "cryptolation.zip")
-                store.upload(file_path, os.path.basename(file_path))
+        # Create a temp file
+        # Create a temp python script using the runner and its scan command
+        #Save & Wrap the data to a common file
+        #Grab the common file
+        #UnWrap the data
 
-                exit_code, exe_logs = ship(cmd_string)
-                if exit_code != 0:
-                    logger.info("potential issue with the run")
-                with open("rawlogs_{0}.txt".format(eph()), "w+") as writer:
-                    print("".join(exe_logs))
-                    for log in exe_logs:
-                        logger.info(log)
-                        writer.write(log + "\n")
+        with marina.titan(
+            image=self.docker_image,
+            working_dir=self.working_dir,
+            name=self.docker_name,
+            to_be_local_files=self.total_files + [obj.path],
+            python_package_imports=self.total_imports
+        ) as ship:
+            exit_code, exe_logs = ship(cmd_string)
+            if exit_code != 0:
+                logger.info("potential issue with the run")
+            with open("rawlogs_{0}.txt".format(eph()), "w+") as writer:
+                print("".join(exe_logs))
+                for log in exe_logs:
+                    logger.info(log)
+                    writer.write(log + "\n")
 
-                logger.info("current files: [{0}]".format(', '.join(store.files())))
-                try:
-                    if base_result_file in store.files():
-                        store.download(result_file, base_result_file)
-                        exists = True
-                except Exception as e:
-                    print(">|>")
-                    print(e)
+            logger.info("current files: [{0}]".format(', '.join(store.files())))
+            try:
+                if base_result_file in store.files():
+                    store.download(result_file, base_result_file)
+                    exists = True
+            except Exception as e:
+                print(">|>")
+                print(e)
 
         import ephfile,mystring
         startTime,endTime,output="","",[]
