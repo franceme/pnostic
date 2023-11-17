@@ -4,7 +4,7 @@ from pnostic.structure import RepoObject, RepoResultObject, SeclusionEnv, Seclus
 
 
 class app(SeclusionEnv):
-    def __init__(self, working_dir:str, docker_image:str, docker_name:str):
+    def __init__(self, working_dir:str, docker_image:str, docker_name_prefix:str):
         super().__init__(working_dir=working_dir)
         self.imports = [
             "sdock[all]"
@@ -12,7 +12,7 @@ class app(SeclusionEnv):
         self.docker_image = docker_image
         self.total_imports = []
         self.total_files = []
-        self.docker_name = docker_name
+        self.docker_name_prefix = docker_name_prefix
 
     def initialize(self) -> bool:
         return True
@@ -77,6 +77,10 @@ with hugg.zipfile("{4}") as zyp:
     def process(self, obj:RepoObject, runner:Runner)->SeclusionEnvOutput:
         from sdock import marina
         from ephfile import ephfile
+        import hugg, ephfile, pickle, os, sys, mystring
+
+        exit_code, exe_logs = -1, []
+        startTime,endTime = "",""
 
         # Create a temp file
         # Create a temp python script using the runner and its scan command
@@ -100,7 +104,9 @@ with hugg.zipfile("{4}") as zyp:
                 python_package_imports=self.total_imports
             ) as ship:
 
+                startTime = mystring.current_date()
                 exit_code, exe_logs = ship("python3 {0}/{1}".format(self.working_dir, self.runner_file_name))
+                endTime = mystring.current_date()
 
                 if self.runner_file_name_output in ship.storage.files():
                     ship.storage.download(self.runner_file_name_output, self.runner_file_name_output)
@@ -120,6 +126,8 @@ with hugg.zipfile("{4}") as zyp:
             start_date_time=startTime,
             scan_object=obj,
             result=output,
+            exit_code=exit_code,
+            exe_logs="\n".join(exe_logs),
             end_date_time=endTime
         )
 

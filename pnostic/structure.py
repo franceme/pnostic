@@ -525,6 +525,8 @@ class SeclusionEnvOutput:
     start_date_time:str
     scan_object:RepoObject
     result:List[RepoResultObject]
+    exit_code:int
+    exit_logs:str
     end_date_time:str
 
 class SeclusionEnv(CoreObject):
@@ -614,35 +616,64 @@ class ThreadWithReturnValue(threading.Thread):
 
 
 class GenProcedure(ABC):
-    """
-class operation(structure.GenProcedure):
-	def __init__(self):
-		super().__init__(
-			fileProviders = [
-				SingleFile.app(content="import os,sys;print('Hello World')")
-			],
-			runners = [
-				simple.app(),
-			],
-			loggersset = [
-				Printr.app(),
-			],
-			perScan = None,
-			stage = None
-		)
+    """_summary_
 
-	def run_procedure(self):
-		with structure.LoggerSet(loggers=self.loggerSet.loggers, stage="StageOne") as logggg:
-			for runnerSvr in self.runners:
-				with self.getRunnerProcedure(runnerSvr) as runner:
-					for fileObj in self.RepoObjects:
-						firstScanResults: List[RepoResultObject] = self.process(fileObj, runner())
-		return
+    Args:
+        ABC (_type_): _description_
 
-operation().run_procedure()
+with utils.clean_op_env():
+	class operation(structure.GenProcedure):
+		def __init__(self):
+			super().__init__(
+				fileProviders = [
+					SingleFile.app(content="import os,sys;print('Hello World')")
+				],
+				runners = [
+					simple.app(),
+				],
+				loggersset = [
+					Printr.app(),
+				],
+				enveloperset = [
+					LiveGraph.app(ipaddress='0.0.0.0', port_to_use=5000)
+				],
+				perScan = None, # A Lambda to run after each scan
+				general_prefix = None, # A prefix to add within the objects and results
+				log_debug_messages = False, # Log debug messages
+				use_results = False, # Use the results from the runner within the run procedure method
+				thread_count = 1, # The number of threads to use
+				seclusion_env = core_seclusion, # The seclusion environment to use, by default it's simply the current python environment
+				seclusion_env_necessary_files = [] # The files to include in the seclusion environment
+			)
+
+		def run_procedure(self):
+			with structure.LoggerSet(loggers=self.loggerSet.loggers, stage="StageOne") as logggg:
+				for runnerSvr in self.runners:
+					with self.getRunnerProcedure(runnerSvr) as runner:
+						for fileObj in self.RepoObjects:
+							firstScanResults: List[RepoResultObject] = self.process(fileObj, runner())
+			return
+
+	operation().run_procedure(isAliveMin:int=None) # Calls the run procedure method with an is alive method checking every isAliveMin minutes
 # or operation()()
     """
     def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger]=[], enveloperset:List[Envelop]=[], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False, thread_count:int=1, use_results=False, seclusion_env:SeclusionEnv=core_seclusion, seclusion_env_necessary_files=[]):
+        """_summary_
+
+        Args:
+            fileProviders (List[RepoObjectProvider]): _description_
+            runners (List[Runner]): _description_
+            loggersset (List[Logger], optional): _description_. Defaults to [].
+            enveloperset (List[Envelop], optional): _description_. Defaults to [].
+            perScan (Union[Callable, None], optional): _description_. Defaults to None.
+            general_prefix (Union[str, None], optional): _description_. Defaults to None.
+            log_debug_messages (bool, optional): _description_. Defaults to False.
+            thread_count (int, optional): _description_. Defaults to 1.
+            use_results (bool, optional): _description_. Defaults to False.
+            seclusion_env (SeclusionEnv, optional): _description_. Defaults to core_seclusion.
+            seclusion_env_necessary_files (list, optional): _description_. Defaults to [].
+        """
+
         self.uuid = mystring.string.of(str(uuid.uuid4()))
         self.fileProviders = fileProviders
         self.runners = runners
@@ -661,7 +692,9 @@ operation().run_procedure()
 
         self.assets = ["pnostic"]
 
-        for big_list in (fileProviders + runners + loggersset + enveloperset + seclusion_env):
+        self.seclusion_env = seclusion_env or core_seclusion
+
+        for big_list in (fileProviders + runners + loggersset + enveloperset + self.seclusion_env):
             if isinstance(big_list, list):
                 for core in big_list:
                     core.installImports()
@@ -678,8 +711,6 @@ operation().run_procedure()
 
         self.use_results = use_results
 
-        self.seclusion_env = seclusion_env
-
         assets_packages = []
         for asset in self.assets:
             assets_packages += asset.imports
@@ -687,9 +718,16 @@ operation().run_procedure()
         self.seclusion_env.setup_files(seclusion_env_necessary_files)
 
     def log(self, msg:Union[mystring.string, RepoObject, RepoResultObject]):
+        """_summary_
+
+        Args:
+            msg (Union[mystring.string, RepoObject, RepoResultObject]): _description_
+        """
         self.loggerSet.send(msg)
 
     class ThreadManager:
+        """_summary_
+        """
         def __init__(self, max_threads, use_results=False):
             self.max_threads = max_threads
             self.current_threads = []
@@ -763,6 +801,14 @@ operation().run_procedure()
 
     @property
     def RepoObjects(self) -> List[RepoObject]:
+        """_summary_
+
+        Returns:
+            List[RepoObject]: _description_
+
+        Yields:
+            Iterator[List[RepoObject]]: _description_
+        """
         for fileProvider in self.fileProviders:
             for RepoObj in fileProvider.RepoObjects:
                 RepoObj.uuid = mystring.string.of(str(uuid.uuid4()))
@@ -781,6 +827,11 @@ operation().run_procedure()
 
     @property
     def getRunnerProcedure(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
         class RunnerProcedure(object):
             def __init__(self, runner:Runner, loggerSet, scanr):
                 self.runner = runner
@@ -811,6 +862,11 @@ operation().run_procedure()
         return lambda runner:RunnerProcedure(runner=runner, loggerSet=self.loggerSet, scanr=self.scan)
 
     def process(self, isAliveMin:int=None):
+        """_summary_
+
+        Args:
+            isAliveMin (int, optional): _description_. Defaults to None.
+        """
         with LoggerSet(self.loggerSet.loggers, stage=":>. Starting the overall process := {0}".format(self.uuid)) as logy:
             def alive(min:int=None, loggerSet=None):
                 import time
@@ -845,6 +901,18 @@ operation().run_procedure()
         pass
 
     def scan(self, obj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False, wait_for_results=False)->List[RepoResultObject]:
+        """_summary_
+
+        Args:
+            obj (RepoObject): _description_
+            runner (Runner): _description_
+            stage (mystring.string, optional): _description_. Defaults to None.
+            notHollow (bool, optional): _description_. Defaults to False.
+            wait_for_results (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            List[RepoResultObject]: _description_
+        """
         thread_id = self.thread_mgr.add_thread(self.scan_thread, args=(obj, runner, stage, notHollow))
         if wait_for_results:
             return self.thread_mgr.result_of_thread(thread_id=thread_id)
@@ -852,6 +920,17 @@ operation().run_procedure()
             return []
 
     def scan_thread(self, repoObj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False)-> List[RepoResultObject]:
+        """_summary_
+
+        Args:
+            repoObj (RepoObject): _description_
+            runner (Runner): _description_
+            stage (mystring.string, optional): _description_. Defaults to None.
+            notHollow (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            List[RepoResultObject]: _description_
+        """
         self.envelopSet.per_repo_obj_scan(repoObj, runner)
         output:List[RepoResultObject] = []
         if repoObj.is_dir and repoObj.file_scan_lambda is not None:
@@ -878,6 +957,17 @@ operation().run_procedure()
         return output
 
     def scanObj(self, obj:RepoObject, runner:Runner, stage:mystring.string=None, notHollow:bool=False)-> List[RepoResultObject]:
+        """_summary_
+
+        Args:
+            obj (RepoObject): _description_
+            runner (Runner): _description_
+            stage (mystring.string, optional): _description_. Defaults to None.
+            notHollow (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            List[RepoResultObject]: _description_
+        """
         from ephfile import ephfile
 
         exceptionString = None
@@ -889,7 +979,7 @@ operation().run_procedure()
                 try:
                     logy.send(obj)
                 except Exception as e:
-                    exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                    _,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                     msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
                     self.loggerSet.emergency(msg)
                     logy.send(msg)
@@ -932,38 +1022,16 @@ operation().run_procedure()
                         if resultObject.ExceptionMsg:
                             self.loggerSet.emergency(resultObject.ExceptionMsg)
                     except Exception as e:
-                        exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                        _,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                         msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
                         self.loggerSet.emergency(msg)
                         logy.send(msg)
 
         except Exception as e:
             exceptionString = str(e)
-            exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            _,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             logy.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
 
         if self.perScan:
             self.perScan()
         return output
-
-    def core_scan(path_to_dir_or_file:str):
-        output = {
-            "startDateTime":None,
-            "path":path_to_dir_or_file,
-            "result":None,
-            "endDateTime":None,
-        }
-        path or file
-        startTime,endTime=None,None
-
-        with ephfile("{0}_stub.py".format(runner.name()), obj.content) as eph:
-
-            try:
-                startTime:datetime.datetime = mystring.current_date()
-                output = runner.scan(eph())
-                endTime:datetime.datetime = mystring.current_date()
-            except Exception as e:
-                exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
-                self.loggerSet.emergency(msg)
-                logy.send(msg)

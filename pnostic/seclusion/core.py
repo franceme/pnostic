@@ -28,6 +28,7 @@ class app(SeclusionEnv):
 
     def process(self, obj:RepoObject, runner:Runner)->SeclusionEnvOutput:
         import ephfile,mystring
+        exit_code, exe_logs = -1, []
         startTime,endTime,output="","",[]
 
         with ephfile.ephfile(contents = obj.content) as eph:
@@ -41,6 +42,7 @@ class app(SeclusionEnv):
                 startTime = mystring.current_date()
                 output = runner.scan(path_to_scan)
                 endTime = mystring.current_date()
+                exit_code = 0
             except Exception as e:
                 _, _, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 output = [RepoResultObject.newEmpty(
@@ -59,5 +61,7 @@ class app(SeclusionEnv):
             start_date_time=startTime,
             scan_object=obj,
             result=output,
+            exit_code=exit_code,
+            exe_logs="\n".join(exe_logs),
             end_date_time=endTime
         )
