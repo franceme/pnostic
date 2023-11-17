@@ -333,6 +333,10 @@ class Runner(CoreObject):
     def scan(self,filePath: str) -> List[RepoResultObject]:
         pass
 
+    @abstractmethod
+    def arg_init_string(self)->str:
+        pass
+
 class Envelop(CoreObject):
     @abstractmethod
     def per_next_repo_obj(self,repo_object: RepoObject):

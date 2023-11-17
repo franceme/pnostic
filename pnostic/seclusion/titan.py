@@ -20,6 +20,14 @@ class app(SeclusionEnv):
     def name(self) -> str:
         return "TitanSeclusion"
 
+    @property
+    def runner_file_name(self):
+        return "seclusion_env_{0}_input.py".format(self.name())
+
+    @property
+    def runner_file_name_output(self):
+        return "seclusion_env_{0}_output.zip".format(self.name())
+
     def clean(self) -> bool:
         return True
 
@@ -31,83 +39,82 @@ class app(SeclusionEnv):
         self.total_files.extend(files)
         return True
 
-    def __py_script_contents(self):
-        return """#!/usr/bin/env python3
-import sys,os
+    def __py_script_contents(self, runner, path_to_scan):
+        return f"""#!/usr/bin/env python3
+import sys,os,json,pickle
 
-from typing import List
-import mystring
+os.system("{{0}} -m pip install --upgrade pip mystring[all] pnostic hugg[all]".format(
+    sys.executable
+))
+
+import mystring,hugg
 from pnostic.structure import RepoResultObject, Runner
+import {0}
 
-app = {runner.name()}.app({runner.initialization_string()})
+app = {1}.app({2})
 
-results = app.scan(xxx)
+os.system("{{0}} -m pip install --upgrade {{1}}".format(
+    sys.executable,
+    " ".join(app.imports)
+))
 
+results = app.scan("{3}") #List[RepoResultObject]
 
-write_results_to_file(results, "file_name")
-"""
+with hugg.zipfile("{4}") as zyp:
+    for repo_obj_itr, repo_result_object in enumerate(results):
+        with ephfile(suffix=".pkl") as eph:
+            with open(eph(), "wb") as foil:
+                pickle.dump(repo_result_object, foil)
+            zyp[repo_obj_itr] = eph()
+""".format(
+    runner.name(),
+    runner.name(), #May need to change this
+    runner.arg_init_string(),
+    path_to_scan,
+    self.runner_file_name
+)
 
     def process(self, obj:RepoObject, runner:Runner)->SeclusionEnvOutput:
         from sdock import marina
+        from ephfile import ephfile
 
         # Create a temp file
         # Create a temp python script using the runner and its scan command
-        #Save & Wrap the data to a common file
-        #Grab the common file
-        #UnWrap the data
+        # Save & Wrap the data to a common file
+        # Grab the common file
+        # UnWrap the data
 
-        with marina.titan(
-            image=self.docker_image,
-            working_dir=self.working_dir,
-            name=self.docker_name,
-            to_be_local_files=self.total_files + [obj.path],
-            python_package_imports=self.total_imports
-        ) as ship:
-            exit_code, exe_logs = ship(cmd_string)
-            if exit_code != 0:
-                logger.info("potential issue with the run")
-            with open("rawlogs_{0}.txt".format(eph()), "w+") as writer:
-                print("".join(exe_logs))
-                for log in exe_logs:
-                    logger.info(log)
-                    writer.write(log + "\n")
+        with open(self.runner_file_name, "w+") as writer:
+            writer.write()
 
-            logger.info("current files: [{0}]".format(', '.join(store.files())))
-            try:
-                if base_result_file in store.files():
-                    store.download(result_file, base_result_file)
-                    exists = True
-            except Exception as e:
-                print(">|>")
-                print(e)
+        with ephfile(foil=self.runner_file_name, contents=self.__py_script_contents(
+                runner=runner,
+                path_to_scan=obj.path
+            )) as eph:
 
-        import ephfile,mystring
-        startTime,endTime,output="","",[]
+            with marina.titan(
+                image=self.docker_image,
+                working_dir=self.working_dir,
+                name=self.docker_name,
+                to_be_local_files=self.total_files + [obj.path, eph()],
+                python_package_imports=self.total_imports
+            ) as ship:
 
-        with ephfile.ephfile(contents = obj.content) as eph:
-            path_to_scan = None
-            if obj.content is None:
-                path_to_scan = obj.path
-            else:
-                path_to_scan = eph()
+                exit_code, exe_logs = ship("python3 {0}/{1}".format(self.working_dir, self.runner_file_name))
 
-            try:
-                startTime = mystring.current_date()
-                output = runner.scan(path_to_scan)
-                endTime = mystring.current_date()
-            except Exception as e:
-                _, _, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                output = [RepoResultObject.newEmpty(
-                    projecttype=obj.path,
-                    projectname=obj.path,
-                    projecturl=None,
-                    qual_name=None,
-                    tool_name=runner.name(),
-                    stage=None,
-                    ExceptionMsg=":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno),
-                    startDateTime=None,
-                    endDateTime=None
-                )]
+                if self.runner_file_name_output in ship.storage.files():
+                    ship.storage.download(self.runner_file_name_output, self.runner_file_name_output)
+
+        output = []
+        if os.path.exists(self.runner_file_name_output):
+            with ephfile(self.runner_file_name_output, create=False) as eph:
+                with hugg.zipfile(eph()) as zyp:
+                    for foil in zyp.files():
+                        with ephfile(suffix=".pkl") as pickl:
+                            zyp.download(foil, pickl())
+                            output += [
+                                pickle.load(pickl())
+                            ]
 
         return SeclusionEnvOutput(
             start_date_time=startTime,
@@ -115,3 +122,5 @@ write_results_to_file(results, "file_name")
             result=output,
             end_date_time=endTime
         )
+
+

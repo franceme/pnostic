@@ -21,3 +21,6 @@ class app(Runner):
     def clean(self) -> bool:
         print("Cleaning")
         return True
+
+    def arg_init_string(self)->str:
+        return ""
