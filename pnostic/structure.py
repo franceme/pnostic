@@ -597,6 +597,15 @@ class contextString(object):
 
         return '\n'.join(output)
 
+def set_time_wrapper(date_time):
+    output = ""
+    if date_time is not None:
+        output = date_time
+        try:
+            output = str(mystring.date_to_iso(date_time))
+        except:pass
+    return output
+
 class ThreadWithReturnValue(threading.Thread):
     #https://stackoverflow.com/questions/6893968/how-to-get-the-return-value-from-a-thread
     def __init__(self, group=None, target=None, name=None,
@@ -1010,8 +1019,9 @@ with utils.clean_op_env():
                 resultObject: RepoResultObject
                 for resultObject in output:
                     try:
-                        resultObject.startDateTime = "" if startTime is None else str(mystring.date_to_iso(startTime))
-                        resultObject.endDateTime = "" if endTime is None else str(mystring.date_to_iso(endTime))
+                        resultObject.startDateTime = set_time_wrapper(resultObject.startDateTime)
+                        resultObject.endDateTime = set_time_wrapper(resultObject.endDateTime)
+
                         resultObject.uuid = obj.uuid
                         if stage:
                             resultObject.stage=stage
