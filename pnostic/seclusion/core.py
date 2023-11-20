@@ -1,6 +1,6 @@
 from typing import List
 import os,sys
-from pnostic.structure import RepoResultObject, SeclusionEnv, SeclusionEnvOutput, Runner
+from pnostic.structure import RepoObject, RepoResultObject, SeclusionEnv, SeclusionEnvOutput, Runner
 
 
 class app(SeclusionEnv):
@@ -26,7 +26,7 @@ class app(SeclusionEnv):
     def setup_files(self,files:List[str]) -> bool:
         return True
 
-    def process(self, obj, runner:Runner)->SeclusionEnvOutput:
+    def process(self, obj:RepoObject, runner:Runner)->SeclusionEnvOutput:
         import ephfile,mystring
         exit_code, exe_logs = -1, []
         startTime,endTime,output="","",[]
