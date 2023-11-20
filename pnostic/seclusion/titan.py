@@ -88,9 +88,6 @@ with hugg.zipfile("{4}") as zyp:
         # Grab the common file
         # UnWrap the data
 
-        with open(self.runner_file_name, "w+") as writer:
-            writer.write()
-
         with ephfile(foil=self.runner_file_name, contents=self.__py_script_contents(
                 runner=runner,
                 path_to_scan=obj.path
