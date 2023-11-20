@@ -690,7 +690,7 @@ with utils.clean_op_env():
 
         self.assets = ["pnostic"]
 
-        self.seclusion_env = seclusion_env or core_seclusion
+        self.seclusion_env = seclusion_env
 
         for big_list in (fileProviders + runners + loggersset + enveloperset + [self.seclusion_env]):
             if isinstance(big_list, list):
