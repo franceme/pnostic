@@ -688,8 +688,7 @@ with utils.clean_op_env():
         for envelop in enveloperset:
             self.envelopSet.add(envelop)
 
-        self.assets = ["pnostic"]
-
+        self.assets = []
         self.seclusion_env = seclusion_env
 
         for big_list in (fileProviders + runners + loggersset + enveloperset + [self.seclusion_env]):
@@ -709,7 +708,7 @@ with utils.clean_op_env():
 
         self.use_results = use_results
 
-        assets_packages = []
+        assets_packages = ["pnostic"]
         for asset in self.assets:
             assets_packages += [asset.imports]
         self.seclusion_env.python_packages(assets_packages)
