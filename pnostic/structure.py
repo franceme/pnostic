@@ -2,8 +2,6 @@ from typing import List, Dict, Union, Callable
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import mystring, uuid, threading, os, sys, splych, datetime, threading, asyncio, time
-from pnostic.seclusion import core as core_seclusion
-
 try: #Python2
     import __builtin__ as builtins
 except:
@@ -657,7 +655,7 @@ with utils.clean_op_env():
 	operation().run_procedure(isAliveMin:int=None) # Calls the run procedure method with an is alive method checking every isAliveMin minutes
 # or operation()()
     """
-    def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger]=[], enveloperset:List[Envelop]=[], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False, thread_count:int=1, use_results=False, seclusion_env:SeclusionEnv=core_seclusion, seclusion_env_necessary_files=[]):
+    def __init__(self, fileProviders:List[RepoObjectProvider], runners:List[Runner], loggersset:List[Logger]=[], enveloperset:List[Envelop]=[], perScan:Union[Callable, None] = None, general_prefix:Union[str, None]=None, log_debug_messages:bool=False, thread_count:int=1, use_results=False, seclusion_env:SeclusionEnv=None, seclusion_env_necessary_files=[]):
         """_summary_
 
         Args:
