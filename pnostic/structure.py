@@ -1026,8 +1026,8 @@ with utils.clean_op_env():
                         if stage:
                             resultObject.stage=stage
                         logy.send(resultObject)
-                        if resultObject.ExceptionMsg:
-                            self.loggerSet.emergency(resultObject.ExceptionMsg)
+                        if resultObject.Exception:
+                            self.loggerSet.emergency(resultObject.Exception)
                     except Exception as e:
                         _,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                         msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
