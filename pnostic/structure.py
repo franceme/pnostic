@@ -982,7 +982,7 @@ with utils.clean_op_env():
                     logy.send(msg)
 
 
-                execution_output = self.seclusion_env(obj, runner)
+                execution_output = self.seclusion_env.process(obj, runner)
                 startTime=execution_output.start_date_time
                 endTime=execution_output.end_date_time
                 output =execution_output.result
