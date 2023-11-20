@@ -692,7 +692,7 @@ with utils.clean_op_env():
 
         self.seclusion_env = seclusion_env or core_seclusion
 
-        for big_list in (fileProviders + runners + loggersset + enveloperset + self.seclusion_env):
+        for big_list in (fileProviders + runners + loggersset + enveloperset + [self.seclusion_env]):
             if isinstance(big_list, list):
                 for core in big_list:
                     core.installImports()
