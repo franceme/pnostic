@@ -711,7 +711,7 @@ with utils.clean_op_env():
 
         assets_packages = []
         for asset in self.assets:
-            assets_packages += asset.imports
+            assets_packages += [asset.imports]
         self.seclusion_env.python_packages(assets_packages)
         self.seclusion_env.setup_files(seclusion_env_necessary_files)
 
