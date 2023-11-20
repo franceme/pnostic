@@ -524,7 +524,7 @@ class SeclusionEnvOutput:
     scan_object:RepoObject
     result:List[RepoResultObject]
     exit_code:int
-    exit_logs:str
+    exe_logs:str
     end_date_time:str
 
 class SeclusionEnv(CoreObject):
