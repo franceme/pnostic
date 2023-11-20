@@ -102,7 +102,7 @@ with hugg.zipfile("{4}") as zyp:
             ) as ship:
 
                 startTime = mystring.current_date()
-                exit_code, exe_logs = ship("python3 {0}/{1}".format(self.working_dir, self.runner_file_name))
+                exit_code, exe_logs = ship.run("python3 {0}/{1}".format(self.working_dir, self.runner_file_name))
                 endTime = mystring.current_date()
 
                 if self.runner_file_name_output in ship.storage.files():
