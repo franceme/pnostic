@@ -77,7 +77,7 @@ with hugg.zipfile("{4}") as zyp:
     def process(self, obj:RepoObject, runner:Runner)->SeclusionEnvOutput:
         from sdock import marina
         from ephfile import ephfile
-        import hugg, ephfile, pickle, os, sys, mystring
+        import hugg, pickle, os, sys, mystring
 
         exit_code, exe_logs = -1, []
         startTime,endTime = "",""
