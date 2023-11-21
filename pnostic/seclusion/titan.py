@@ -40,7 +40,7 @@ class app(SeclusionEnv):
         return True
 
     def __py_script_contents(self, runner, path_to_scan):
-        return f"""#!/usr/bin/env python3
+        return """#!/usr/bin/env python3
 import sys,os,json,pickle
 
 os.system("{{0}} -m pip install --upgrade pip mystring[all] pnostic hugg[all]".format(
