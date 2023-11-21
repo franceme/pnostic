@@ -13,10 +13,13 @@ class app(SeclusionEnv):
         self.total_imports = []
         self.total_files = []
         self.docker_name_prefix = docker_name_prefix
+        self.initialized=False
 
     def initialize(self) -> bool:
-        cmd = "docker pull {0}".format(self.docker_image)
-        print(cmd);os.system(cmd)
+        if not self.initialized:
+            cmd = "docker pull {0}".format(self.docker_image)
+            print(cmd);os.system(cmd)
+            self.initialized=True
         return True
 
     def name(self) -> str:
@@ -87,6 +90,7 @@ with hugg.zipfile("{4}") as zyp:
 )
 
     def process(self, obj:RepoObject, runner:Runner)->SeclusionEnvOutput:
+        self.initialize()
         from sdock import marina
         from ephfile import ephfile
         import hugg, pickle, os, sys, mystring
