@@ -1,5 +1,5 @@
 from typing import List
-import os,sys
+import os, sys, uuid
 from pnostic.structure import RepoObject, RepoResultObject, SeclusionEnv, SeclusionEnvOutput, Runner
 
 
@@ -15,6 +15,8 @@ class app(SeclusionEnv):
         self.docker_name_prefix = docker_name_prefix
 
     def initialize(self) -> bool:
+        cmd = "docker pull {0}".format(self.docker_image)
+        print(cmd);os.system(cmd)
         return True
 
     def name(self) -> str:
@@ -40,6 +42,14 @@ class app(SeclusionEnv):
         return True
 
     def __py_script_contents(self, runner, path_to_scan):
+        runner_import, lookfor = "#IMPORT NOT IDENTIFIED", runner.name()+".py"
+        for file_import in self.total_files:
+            if file_import.endswith(lookfor):
+                runner_import = "from {0} import {1}".format(
+                    file_import.replace(lookfor,""),
+                    runner.name()
+                )
+
         return """#!/usr/bin/env python3
 import sys,os,json,pickle
 
@@ -49,7 +59,9 @@ os.system("{{0}} -m pip install --upgrade pip mystring[all] pnostic hugg[all]".f
 
 import mystring,hugg
 from pnostic.structure import RepoResultObject, Runner
-import {0}
+
+sys.path.insert(0,".");
+{0}
 
 app = {1}.app({2})
 
@@ -67,8 +79,8 @@ with hugg.zipfile("{4}") as zyp:
                 pickle.dump(repo_result_object, foil)
             zyp[repo_obj_itr] = eph()
 """.format(
+    runner_import,
     runner.name(),
-    runner.name(), #May need to change this
     runner.arg_init_string(),
     path_to_scan,
     self.runner_file_name
@@ -96,7 +108,7 @@ with hugg.zipfile("{4}") as zyp:
             with marina.titan(
                 image=self.docker_image,
                 working_dir=self.working_dir,
-                name=self.docker_name,
+                name="{0}_{1}".format(self.docker_name_prefix, str(uuid.uuid4())),
                 to_be_local_files=self.total_files + [obj.path, eph()],
                 python_package_imports=self.total_imports
             ) as ship:
