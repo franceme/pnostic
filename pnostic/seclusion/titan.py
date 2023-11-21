@@ -104,25 +104,27 @@ with hugg.zipfile("{4}") as zyp:
         # Grab the common file
         # UnWrap the data
 
-        with ephfile(foil=self.runner_file_name, contents=self.__py_script_contents(
-                runner=runner,
-                path_to_scan=obj.path
-            )) as eph:
+        if obj.content != None:
+            with ephfile(foil=obj.path, contents=obj.content) as to_scan:
+                with ephfile(foil=self.runner_file_name, contents=self.__py_script_contents(
+                        runner=runner,
+                        path_to_scan=to_scan()
+                    )) as eph:
 
-            with marina.titan(
-                image=self.docker_image,
-                working_dir=self.working_dir,
-                name="{0}_{1}".format(self.docker_name_prefix, str(uuid.uuid4())),
-                to_be_local_files=self.total_files + [obj.path, eph()],
-                python_package_imports=self.total_imports
-            ) as ship:
+                    with marina.titan(
+                        image=self.docker_image,
+                        working_dir=self.working_dir,
+                        name="{0}_{1}".format(self.docker_name_prefix, str(uuid.uuid4())),
+                        to_be_local_files=self.total_files + [to_scan(), eph()],
+                        python_package_imports=self.total_imports
+                    ) as ship:
 
-                startTime = mystring.current_date()
-                exit_code, exe_logs = ship.run("python3 {0}/{1}".format(self.working_dir, self.runner_file_name))
-                endTime = mystring.current_date()
+                        startTime = mystring.current_date()
+                        exit_code, exe_logs = ship.run("python3 {0}/{1}".format(self.working_dir, self.runner_file_name))
+                        endTime = mystring.current_date()
 
-                if self.runner_file_name_output in ship.storage.files():
-                    ship.storage.download(self.runner_file_name_output, self.runner_file_name_output)
+                        if self.runner_file_name_output in ship.storage.files():
+                            ship.storage.download(self.runner_file_name_output, self.runner_file_name_output)
 
         output = []
         if os.path.exists(self.runner_file_name_output):
