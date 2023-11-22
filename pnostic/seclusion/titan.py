@@ -151,6 +151,8 @@ except Exception as e:
                                     exit_code, exe_logs = ship.run(cmd_string)
                                     endTime = mystring.current_date()
 
+                                    startTime,endTime=mystring.date_to_iso(startTime),mystring.date_to_iso(endTime)
+
                                     if self.runner_file_name_output in ship.storage.files():
                                         ship.storage.download(self.runner_file_name_output, self.runner_file_name_output)
                             except Exception as e:
@@ -169,6 +171,7 @@ except Exception as e:
                         zyp.download(foil, zippickl())
                         with open(zippickl(), "rb") as pickl:
                             temp_data = pickle.load(pickl)
+                            temp_data.qual_name = obj.path
                             temp_data.fileContent = mystring.string.of(overall_content).tobase64(prefix=True)
 
                             output += [
