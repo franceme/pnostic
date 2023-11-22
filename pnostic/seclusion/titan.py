@@ -123,7 +123,10 @@ except Exception as e:
         # Grab the common file
         # UnWrap the data
 
+        overall_content = ""
+
         if obj.content != None:
+            overall_content = obj.content
             try:
                 with ephfile(foil=obj.path, contents=obj.content) as to_scan:
                     try:
@@ -156,6 +159,7 @@ except Exception as e:
                         print(f"2: {e}")
             except Exception as e:
                 print(f"3: {e}")
+        
 
         output = []
         if os.path.exists(self.runner_file_name_output):
@@ -164,8 +168,11 @@ except Exception as e:
                     with ephfile(suffix=".pkl") as zippickl:
                         zyp.download(foil, zippickl())
                         with open(zippickl(), "rb") as pickl:
+                            temp_data = pickle.load(pickl)
+                            temp_data.fileContent = mystring.string.of(overall_content).tobase64(prefix=True)
+
                             output += [
-                                pickle.load(pickl)
+                                temp_data
                             ]
             os.remove(self.runner_file_name_output)
 
