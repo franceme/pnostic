@@ -5,9 +5,11 @@ from pnostic.structure import RepoObject, RepoResultObject, SeclusionEnv, Seclus
 
 class app(SeclusionEnv):
     def __init__(self, working_dir:str, docker_image:str, docker_name_prefix:str):
+        working_dir = "/sync"
         super().__init__(working_dir=working_dir)
         self.imports = [
-            "sdock[all]"
+            "sdock[all]",
+            "mystring",
         ]
         self.docker_image = docker_image
         self.total_imports = []
@@ -45,22 +47,27 @@ class app(SeclusionEnv):
         return True
 
     def __py_script_contents(self, runner, path_to_scan):
+        import mystring
         runner_import, lookfor = "#IMPORT NOT IDENTIFIED", runner.name()+".py"
         for file_import in self.total_files:
             if file_import.endswith(lookfor):
+                import_string = file_import.replace(lookfor,"").replace("/",".")
+                if import_string.endswith("."):
+                    import_string = import_string[:-1]
                 runner_import = "from {0} import {1}".format(
-                    file_import.replace(lookfor,""),
+                    import_string,
                     runner.name()
                 )
 
-        return """#!/usr/bin/env python3
+        contents= """#!/usr/bin/env python3
 import sys,os,json,pickle
 
-os.system("{{0}} -m pip install --upgrade pip mystring[all] pnostic hugg[all]".format(
+os.system("{{0}} -m pip install --upgrade pip mystring[all] pnostic hugg[all] ephfile".format(
     sys.executable
 ))
 
 import mystring,hugg
+from ephfile import ephfile
 from pnostic.structure import RepoResultObject, Runner
 
 sys.path.insert(0,".");
@@ -68,26 +75,38 @@ sys.path.insert(0,".");
 
 app = {1}.app({2})
 
+def err(string):
+    with open("error_log.log", "w+") as writer:
+        writer.write(str(string) + "\\n")
+
 os.system("{{0}} -m pip install --upgrade {{1}}".format(
     sys.executable,
     " ".join(app.imports)
 ))
 
+app.initialize()
 results = app.scan("{3}") #List[RepoResultObject]
 
-with hugg.zipfile("{4}") as zyp:
-    for repo_obj_itr, repo_result_object in enumerate(results):
-        with ephfile(suffix=".pkl") as eph:
-            with open(eph(), "wb") as foil:
-                pickle.dump(repo_result_object, foil)
-            zyp[repo_obj_itr] = eph()
+try:
+    with hugg.zyp("{4}") as zyp:
+        for repo_obj_itr, repo_result_object in enumerate(results):
+            with ephfile(suffix=".pkl") as eph:
+                try:
+                    with open(eph(), "wb") as foil:
+                        pickle.dump(repo_result_object, foil)
+                    zyp["result_{{0}}.pkl".format(str(repo_obj_itr).zfill(8))] = eph()
+                except Exception as e:
+                    err(e)
+except Exception as e:
+    err(e)
 """.format(
     runner_import,
     runner.name(),
     runner.arg_init_string(),
     path_to_scan,
-    self.runner_file_name
+    self.runner_file_name_output
 )
+        return mystring.string.of(contents).shellCore()
 
     def process(self, obj:RepoObject, runner:Runner)->SeclusionEnvOutput:
         self.initialize()
@@ -105,37 +124,50 @@ with hugg.zipfile("{4}") as zyp:
         # UnWrap the data
 
         if obj.content != None:
-            with ephfile(foil=obj.path, contents=obj.content) as to_scan:
-                with ephfile(foil=self.runner_file_name, contents=self.__py_script_contents(
-                        runner=runner,
-                        path_to_scan=to_scan()
-                    )) as eph:
+            try:
+                with ephfile(foil=obj.path, contents=obj.content) as to_scan:
+                    try:
+                        with ephfile(foil=self.runner_file_name, contents=self.__py_script_contents(
+                            runner=runner,
+                            path_to_scan=to_scan()
+                        )) as eph:
+                            try:
+                                with marina.titan(
+                                    image=self.docker_image,
+                                    working_dir=self.working_dir,
+                                    name="{0}_{1}".format(self.docker_name_prefix, str(uuid.uuid4())),
+                                    mount_from_to={
+                                        os.path.abspath(os.curdir):"/sync/"
+                                    },
+                                    to_be_local_files=self.total_files + [to_scan(), eph()],
+                                    python_package_imports=self.total_imports
+                                ) as ship:
 
-                    with marina.titan(
-                        image=self.docker_image,
-                        working_dir=self.working_dir,
-                        name="{0}_{1}".format(self.docker_name_prefix, str(uuid.uuid4())),
-                        to_be_local_files=self.total_files + [to_scan(), eph()],
-                        python_package_imports=self.total_imports
-                    ) as ship:
+                                    cmd_string = "python3 {0}/{1}".format(self.working_dir, self.runner_file_name)
+                                    startTime = mystring.current_date()
+                                    exit_code, exe_logs = ship.run(cmd_string)
+                                    endTime = mystring.current_date()
 
-                        startTime = mystring.current_date()
-                        exit_code, exe_logs = ship.run("python3 {0}/{1}".format(self.working_dir, self.runner_file_name))
-                        endTime = mystring.current_date()
-
-                        if self.runner_file_name_output in ship.storage.files():
-                            ship.storage.download(self.runner_file_name_output, self.runner_file_name_output)
+                                    if self.runner_file_name_output in ship.storage.files():
+                                        ship.storage.download(self.runner_file_name_output, self.runner_file_name_output)
+                            except Exception as e:
+                                print(f"1: {e}")
+                    except Exception as e:
+                        print(f"2: {e}")
+            except Exception as e:
+                print(f"3: {e}")
 
         output = []
         if os.path.exists(self.runner_file_name_output):
-            with ephfile(self.runner_file_name_output, create=False) as eph:
-                with hugg.zipfile(eph()) as zyp:
-                    for foil in zyp.files():
-                        with ephfile(suffix=".pkl") as pickl:
-                            zyp.download(foil, pickl())
+            with hugg.zyp(self.runner_file_name_output) as zyp:
+                for foil in zyp.files():
+                    with ephfile(suffix=".pkl") as zippickl:
+                        zyp.download(foil, zippickl())
+                        with open(zippickl(), "rb") as pickl:
                             output += [
-                                pickle.load(pickl())
+                                pickle.load(pickl)
                             ]
+            os.remove(self.runner_file_name_output)
 
         return SeclusionEnvOutput(
             start_date_time=startTime,
