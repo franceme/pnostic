@@ -436,7 +436,7 @@ class Logger(CoreObject):
 
     def start(self, stage:mystring.string):
         self.stage = stage
-        self.send(":>␍ Entering the stage: {0}".format(self.stage))
+        self.send("01: Entering the stage: {0}".format(self.stage))
         return self
 
     def send(self, msg:Union[mystring.string, RepoObject, RepoResultObject])->bool:
@@ -453,7 +453,7 @@ class Logger(CoreObject):
         return successful
 
     def stop(self):
-        self.send(":>␌ Exiting the stage: {0}".format(self.stage))
+        self.send("02: Exiting the stage: {0}".format(self.stage))
         return self
 
 class LoggerSet(object):
@@ -478,17 +478,17 @@ class LoggerSet(object):
     def start(self, stage:mystring.string):
         for logger in self.loggers:
             with self.logger_queue_lock:
-                if self.log_debug_messages:logger.send(":>␋ sending to logger {0}".format(logger.name()))
+                if self.log_debug_messages:logger.send("03: sending to logger {0}".format(logger.name()))
                 logger.start(self.stage or stage)
-                if self.log_debug_messages:logger.send(":>␋ ^^^^^ sending to {0}".format(logger.name()))
+                if self.log_debug_messages:logger.send("04: ^^^^^ sending to {0}".format(logger.name()))
         return self
 
     def send(self, msg:Union[mystring.string, RepoObject, RepoResultObject])->bool:
         for logger in self.loggers:
             with self.logger_queue_lock:
-                if self.log_debug_messages:logger.send(":>␈ sending to {0}".format(logger.name()))
+                if self.log_debug_messages:logger.send("05: sending to {0}".format(logger.name()))
                 logger.send(msg)
-                if self.log_debug_messages:logger.send(":>␈ end sending to {0}".format(logger.name()))
+                if self.log_debug_messages:logger.send("06: end sending to {0}".format(logger.name()))
         return self
 
     def emergency(self, msg:mystring.string)->bool:
@@ -499,9 +499,9 @@ class LoggerSet(object):
     def stop(self):
         for logger in self.loggers:
             with self.logger_queue_lock:
-                if self.log_debug_messages:logger.send(":>␇ sending to {0}".format(logger.name()))
+                if self.log_debug_messages:logger.send("07: sending to {0}".format(logger.name()))
                 logger.stop()
-                if self.log_debug_messages:logger.send(":>␇ end sending to {0}".format(logger.name()))
+                if self.log_debug_messages:logger.send("08: end sending to {0}".format(logger.name()))
         return self
 
     def __enter__(self, stage:Union[mystring.string, None]=None):
@@ -845,9 +845,9 @@ with utils.clean_op_env():
                 self.scanFile = scanr
 
             def log(self, msg:Union[mystring.string, RepoObject, RepoResultObject]):
-                self.loggerSet.send(":>␄ START LOG")
+                self.loggerSet.send("09: START LOG")
                 self.loggerSet.send(msg)
-                self.loggerSet.send(":>␄ END LOG")
+                self.loggerSet.send("10: END LOG")
 
             def __call__(self) -> Runner:
                 return self.runner
@@ -856,13 +856,13 @@ with utils.clean_op_env():
                 self.scanFile(fileObj, self.runner)
 
             def __enter__(self):
-                self.loggerSet.send(":>␅ START")
+                self.loggerSet.send("11: START")
                 self.runner.initialize()
-                self.loggerSet.send(":>␅ END START")
+                self.loggerSet.send("12: END START")
                 return self
 
             def __exit__(self, _type=None, value=None, traceback=None):
-                self.loggerSet.send(":>␆ START")
+                self.loggerSet.send("13: START")
                 self.runner.clean()
 
         return lambda runner:RunnerProcedure(runner=runner, loggerSet=self.loggerSet, scanr=self.scan)
@@ -873,11 +873,11 @@ with utils.clean_op_env():
         Args:
             isAliveMin (int, optional): _description_. Defaults to None.
         """
-        with LoggerSet(self.loggerSet.loggers, stage=":>. Starting the overall process := {0}".format(self.uuid)) as logy:
+        with LoggerSet(self.loggerSet.loggers, stage="Stage 1: Starting the overall process := {0}".format(self.uuid)) as logy:
             def alive(min:int=None, loggerSet=None):
                 import time
                 while True:
-                    loggerSet.send(":> Still Alive")
+                    loggerSet.send("14: Still Alive")
                     time.sleep(60 * min)
 
             aliveThread = None
@@ -886,7 +886,7 @@ with utils.clean_op_env():
                 aliveThread.start()
 
             try:
-                logy.send(":> Starting the procedure")
+                logy.send("15: Starting the procedure")
                 self.run_procedure()
                 while not self.thread_mgr.wait_until_completed():
                     time.sleep(10)
@@ -895,8 +895,8 @@ with utils.clean_op_env():
                 _, _, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 logy.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
             finally:
-                logy.send(":> Closing the process")
-        logy.send("Exiting the Scan := {0}".format(self.uuid))
+                logy.send("16: Closing the process")
+        logy.send("17: Exiting the Scan := {0}".format(self.uuid))
         sys.exit(0)
 
     def __call__(self):
@@ -980,13 +980,13 @@ with utils.clean_op_env():
         output:List[RepoResultObject] = []
 
         try:
-            with LoggerSet(self.loggerSet.loggers, stage="␃ Scanning {0} with {1} in procedure := [{2}] as run := [{3}]".format(obj.path, runner.name(), self.uuid, obj.uuid)) as logy:
-                logy.send("␀ Starting For Loop")
+            with LoggerSet(self.loggerSet.loggers, stage="Stage 2 Scanning {0} with {1} in procedure := [{2}] as run := [{3}]".format(obj.path, runner.name(), self.uuid, obj.uuid)) as logy:
+                logy.send("18: Starting For Loop")
                 try:
                     logy.send(obj)
                 except Exception as e:
                     _,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                    msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
+                    msg = "19: Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
                     self.loggerSet.emergency(msg)
                     logy.send(msg)
 
@@ -996,7 +996,7 @@ with utils.clean_op_env():
                 endTime=execution_output.end_date_time
                 output =execution_output.result
 
-                logy.send("␁ Finished Scanning {0} {1}".format(obj.str_type(), obj.path))
+                logy.send("20: Finished Scanning {0} {1}".format(obj.str_type(), obj.path))
                 if endTime is None:
                     endTime = startTime
 
