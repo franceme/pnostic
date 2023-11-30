@@ -5,7 +5,6 @@ from pnostic.structure import RepoObject, RepoResultObject, SeclusionEnv, Seclus
 
 class app(SeclusionEnv):
     def __init__(self, working_dir:str, docker_image:str, docker_name_prefix:str):
-        working_dir = "/sync"
         super().__init__(working_dir=working_dir)
         self.imports = [
             "sdock[all]",
