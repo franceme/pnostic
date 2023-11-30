@@ -75,7 +75,7 @@ sys.path.insert(0,".");
 app = {1}.app({2})
 
 def err(string):
-    with open("error_log.log", "w+") as writer:
+    with open("{5}/error_log.log", "a+") as writer:
         writer.write(str(string) + "\\n")
 
 os.system("{{0}} -m pip install --upgrade {{1}}".format(
@@ -87,7 +87,8 @@ try:
     app.initialize()
     results = app.scan("{3}") #List[RepoResultObject]
 except Exception as e:
-    err(e)
+    err("0: "+str(e))
+
 
 try:
     with hugg.zyp("{4}") as zyp:
@@ -98,15 +99,16 @@ try:
                         pickle.dump(repo_result_object, foil)
                     zyp["result_{{0}}.pkl".format(str(repo_obj_itr).zfill(8))] = eph()
                 except Exception as e:
-                    err(e)
+                    err("1: "+str(e))
 except Exception as e:
-    err(e)
+    err("2: "+str(e))
 """.format(
     runner_import,
     runner.name(),
     runner.arg_init_string(),
     path_to_scan,
-    self.runner_file_name_output
+    self.runner_file_name_output,
+    self.working_dir
 )
         return mystring.string.of(contents).shellCore()
 
