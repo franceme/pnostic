@@ -83,8 +83,11 @@ os.system("{{0}} -m pip install --upgrade {{1}}".format(
     " ".join(app.imports)
 ))
 
-app.initialize()
-results = app.scan("{3}") #List[RepoResultObject]
+try:
+    app.initialize()
+    results = app.scan("{3}") #List[RepoResultObject]
+except Exception as e:
+    err(e)
 
 try:
     with hugg.zyp("{4}") as zyp:
@@ -128,10 +131,11 @@ except Exception as e:
             overall_content = obj.content
             try:
                 with ephfile(foil=obj.path, contents=obj.content) as to_scan:
+                    to_scan.relative = to_scan().replace(os.path.abspath(os.curdir)+"/","") # self.working_dir)
                     try:
                         with ephfile(foil=self.runner_file_name, contents=self.__py_script_contents(
                             runner=runner,
-                            path_to_scan=to_scan()
+                            path_to_scan=to_scan.relative
                         )) as eph:
                             try:
                                 with marina.titan(
@@ -141,7 +145,7 @@ except Exception as e:
                                     mount_from_to={
                                         os.path.abspath(os.curdir):"/sync/"
                                     },
-                                    to_be_local_files=self.total_files + [to_scan(), eph()],
+                                    to_be_local_files=self.total_files + [to_scan.relative, eph()],
                                     python_package_imports=self.total_imports
                                 ) as ship:
 
