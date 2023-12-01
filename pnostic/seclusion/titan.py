@@ -132,14 +132,20 @@ except Exception as e:
         if obj.content != None:
             overall_content = obj.content
             try:
-                with ephfile(foil=obj.path, contents=obj.content) as to_scan:
-                    to_scan.relative = to_scan().replace(os.path.abspath(os.curdir)+"/","") # self.working_dir)
-                    relativePath = to_scan.relative.replace(os.path.basename(to_scan()),"")
+                #with ephfile(foil=obj.path, contents=obj.content) as to_scan:
+                if not os.path.exists(obj.path):
+                    os.makedirs(os.path.dirname(obj.path))
+                    with open(obj.path, "w+") as writer:
+                        writer.write(obj.content)
+                to_scan = obj.path
+                if True:
+                    to_scan_relative = to_scan.replace(os.path.abspath(os.curdir)+"/","") # self.working_dir)
+                    relativePath = to_scan_relative.replace(os.path.basename(to_scan),"")
                     download_to = os.path.join(relativePath, self.runner_file_name_output)
                     try:
                         with ephfile(foil=self.runner_file_name, contents=self.__py_script_contents(
                             runner=runner,
-                            path_to_scan=to_scan.relative
+                            path_to_scan=to_scan_relative
                         )) as eph:
                             try:
                                 with marina.titan(
@@ -149,7 +155,7 @@ except Exception as e:
                                     mount_from_to={
                                         os.path.abspath(os.curdir):"/sync/"
                                     },
-                                    to_be_local_files=self.total_files + [to_scan.relative, eph()],
+                                    to_be_local_files=self.total_files + [to_scan_relative, eph()],
                                     python_package_imports=self.total_imports
                                 ) as ship:
 
