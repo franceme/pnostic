@@ -15,6 +15,8 @@ class app(SeclusionEnv):
         self.total_files = []
         self.docker_name_prefix = docker_name_prefix
         self.initialized=False
+        self.uuid = str(uuid.uuid4())
+        self.runner_name = ""
 
     def initialize(self) -> bool:
         if not self.initialized:
@@ -28,11 +30,11 @@ class app(SeclusionEnv):
 
     @property
     def runner_file_name(self):
-        return "seclusion_env_{0}_input.py".format(self.name())
+        return "seclusion_env_{0}_{1}_{2}_input.py".format(self.name(), self.runner_name, self.uuid)
 
     @property
     def runner_file_name_output(self):
-        return "seclusion_env_{0}_output.zip".format(self.name())
+        return "seclusion_env_{0}_{1}_{2}_output.zip".format(self.name(), self.runner_name, self.uuid)
 
     def clean(self) -> bool:
         return True
@@ -113,6 +115,7 @@ except Exception as e:
         return mystring.string.of(contents).shellCore()
 
     def process(self, obj:RepoObject, runner:Runner)->SeclusionEnvOutput:
+        self.runner_name = runner.name()
         self.initialize()
         from sdock import marina
         from ephfile import ephfile
@@ -151,7 +154,7 @@ except Exception as e:
                                 with marina.titan(
                                     image=self.docker_image,
                                     working_dir=self.working_dir,
-                                    name="{0}_{1}".format(self.docker_name_prefix, str(uuid.uuid4())),
+                                    name="{0}_{1}".format(self.docker_name_prefix, self.uuid),
                                     mount_from_to={
                                         os.path.abspath(os.curdir):"/sync/"
                                     },
