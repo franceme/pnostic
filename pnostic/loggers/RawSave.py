@@ -10,9 +10,6 @@ class app(Logger):
     def initialize(self) -> bool:
         return True
 
-    def __relative_pathing(self, path)->str:
-        return path.replace(os.path.abspath(os.curdir), "")
-
     def name(self) -> mystring.string:
         return mystring.string.of("Raw Save")
 
@@ -22,11 +19,14 @@ class app(Logger):
     def message(self, msg: str) -> bool:
         return True
 
+    def __relative_pathing(self, path)->str:
+        return path.replace(os.path.abspath(os.curdir), "")
+
     def emergency(self, msg:str)->bool:
         utils.custom_msg(msg, utils.bcolors.FAIL)
         return True
 
-    def __write_out(object:RepoObject, second_pathing_argument):
+    def __write_out(self, object:RepoObject, second_pathing_argument):
         try:
             object.frame.to_pickle(
                 self.file_name(object, second_pathing_argument, suffix=".pkl")
@@ -47,6 +47,6 @@ class app(Logger):
     def result(self, result: RepoResultObject) -> bool:
         self.__write_out(
             object=result,
-            second_pathing_argument=result.tool_name
+            second_pathing_argument=result.tool_name+"_V_"+self.__relative_pathing(result.qual_name).replace("/","_^_")
         )
         return True

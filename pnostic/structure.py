@@ -416,22 +416,25 @@ class Logger(CoreObject):
         
         return splych.file_split(file_path, chunk_size=self.file_size_limit_bytes, delete_original=True)
 
+    def __relative_pathing(self, path)->str:
+        return path.replace(os.path.abspath(os.curdir), "")
+
     def file_name(self, result:RepoSifting, extraString:str='', prefix:str='', suffix:str=".txt", newFile:bool=True)->str:
-        current_file = mystring.string.of("{0}_{1}_{2}_{3}".format(
+        current_file = mystring.string.of("{0}_{1}/{2}_{3}".format(
             prefix,
             result.uuid,
             extraString,
             suffix
         ))
         if self.general_prefix:
-            current_file = mystring.string.of("{0}_{1}".format(self.general_prefix, current_file))
+            current_file = self.__relative_pathing(mystring.string.of("{0}_{1}".format(self.general_prefix, current_file)))
 
         if newFile:
             ktr = 0
             while os.path.exists(current_file):
                 current_file = current_file.replace(suffix, "_{0}{1}".format(ktr, suffix))
                 ktr += 1
-        os.makedirs(os.path.dirname(current_file), exists_ok=True)
+        os.makedirs(os.path.dirname(current_file), exist_ok=True)
         return current_file
 
     def start(self, stage:mystring.string):
