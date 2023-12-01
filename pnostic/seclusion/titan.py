@@ -119,7 +119,7 @@ except Exception as e:
         import hugg, pickle, os, sys, mystring
 
         exit_code, exe_logs = -1, []
-        startTime,endTime = "",""
+        startTime,endTime,relativePath,download_to = "","","",""
 
         # Create a temp file
         # Create a temp python script using the runner and its scan command
@@ -134,6 +134,8 @@ except Exception as e:
             try:
                 with ephfile(foil=obj.path, contents=obj.content) as to_scan:
                     to_scan.relative = to_scan().replace(os.path.abspath(os.curdir)+"/","") # self.working_dir)
+                    relativePath = to_scan.relative.replace(os.path.basename(to_scan()),"")
+                    download_to = os.path.join(relativePath, self.runner_file_name_output)
                     try:
                         with ephfile(foil=self.runner_file_name, contents=self.__py_script_contents(
                             runner=runner,
@@ -159,7 +161,7 @@ except Exception as e:
                                     startTime,endTime=mystring.date_to_iso(startTime),mystring.date_to_iso(endTime)
 
                                     if self.runner_file_name_output in ship.storage.files():
-                                        ship.storage.download(self.runner_file_name_output, self.runner_file_name_output)
+                                        ship.storage.download(self.runner_file_name_output, download_to)
                             except Exception as e:
                                 print(f"1: {e}")
                     except Exception as e:
@@ -169,8 +171,8 @@ except Exception as e:
         
 
         output = []
-        if os.path.exists(self.runner_file_name_output):
-            with hugg.zyp(self.runner_file_name_output) as zyp:
+        if download_to != '' and os.path.exists(download_to):
+            with hugg.zyp(download_to) as zyp:
                 for foil in zyp.files():
                     with ephfile(suffix=".pkl") as zippickl:
                         zyp.download(foil, zippickl())
@@ -182,7 +184,7 @@ except Exception as e:
                             output += [
                                 temp_data
                             ]
-            os.remove(self.runner_file_name_output)
+            os.remove(download_to)
 
         return SeclusionEnvOutput(
             start_date_time=startTime,
