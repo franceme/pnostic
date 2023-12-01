@@ -134,7 +134,7 @@ except Exception as e:
             try:
                 #with ephfile(foil=obj.path, contents=obj.content) as to_scan:
                 if not os.path.exists(obj.path):
-                    os.makedirs(os.path.dirname(obj.path))
+                    os.makedirs(os.path.dirname(obj.path), exist_ok=True)
                     with open(obj.path, "w+") as writer:
                         writer.write(obj.content)
                 to_scan = obj.path
@@ -174,7 +174,7 @@ except Exception as e:
                         print(f"2: {e}")
             except Exception as e:
                 print(f"3: {e}")
-        
+
 
         output = []
         if download_to != '' and os.path.exists(download_to):
