@@ -431,7 +431,7 @@ class Logger(CoreObject):
             while os.path.exists(current_file):
                 current_file = current_file.replace(suffix, "_{0}{1}".format(ktr, suffix))
                 ktr += 1
-
+        os.makedirs(os.path.dirname(current_file), exists_ok=True)
         return current_file
 
     def start(self, stage:mystring.string):

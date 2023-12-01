@@ -10,6 +10,9 @@ class app(Logger):
     def initialize(self) -> bool:
         return True
 
+    def __relative_pathing(self, path)->str:
+        return path.replace(os.path.abspath(os.curdir), "")
+
     def name(self) -> mystring.string:
         return mystring.string.of("Raw Save")
 
@@ -23,10 +26,10 @@ class app(Logger):
         utils.custom_msg(msg, utils.bcolors.FAIL)
         return True
 
-    def parameter(self, parameter: RepoObject) -> bool:
+    def __write_out(object:RepoObject, second_pathing_argument):
         try:
-            parameter.frame.to_pickle(
-                self.file_name(parameter, parameter.path, suffix=".pkl")
+            object.frame.to_pickle(
+                self.file_name(object, second_pathing_argument, suffix=".pkl")
             )
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -34,13 +37,16 @@ class app(Logger):
             print(msg)
         return True
 
+    def parameter(self, parameter: RepoObject) -> bool:
+        self.__write_out(
+            object=parameter,
+            second_pathing_argument=self.__relative_pathing(parameter.path).replace("/","_^_")
+        )
+        return True
+
     def result(self, result: RepoResultObject) -> bool:
-        try:
-            result.frame.to_pickle(
-                self.file_name(result, result.tool_name, suffix=".pkl")
-            )
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
-            print(msg)
+        self.__write_out(
+            object=result,
+            second_pathing_argument=result.tool_name
+        )
         return True
