@@ -4,7 +4,7 @@ from pnostic.structure import RepoObject, RepoResultObject, SeclusionEnv, Seclus
 
 
 class app(SeclusionEnv):
-    def __init__(self, working_dir:str, docker_image:str, docker_name_prefix:str):
+    def __init__(self, working_dir:str, docker_image:str, docker_name_prefix:str, export_working_dir:str):
         super().__init__(working_dir=working_dir)
         self.imports = [
             "sdock[all]",
@@ -17,6 +17,7 @@ class app(SeclusionEnv):
         self.initialized=False
         self.uuid = str(uuid.uuid4())
         self.runner_name = ""
+        self.export_working_dir = export_working_dir
 
     def initialize(self) -> bool:
         if not self.initialized:
@@ -159,7 +160,8 @@ except Exception as e:
                                         os.path.abspath(os.curdir):"/sync/"
                                     },
                                     to_be_local_files=self.total_files + [to_scan_relative, eph()],
-                                    python_package_imports=self.total_imports
+                                    python_package_imports=self.total_imports,
+                                    download_working_dir_file=self.export_working_dir
                                 ) as ship:
 
                                     cmd_string = "python3 {0}/{1}".format(self.working_dir, self.runner_file_name)
