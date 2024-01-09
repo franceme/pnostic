@@ -52,7 +52,7 @@ class app(SeclusionEnv):
                     qual_name=None,
                     tool_name=runner.name(),
                     stage=None,
-                    ExceptionMsg=":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno),
+                    ExceptionMsg="-> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno),
                     startDateTime=None,
                     endDateTime=None
                 )]

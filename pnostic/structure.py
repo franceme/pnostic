@@ -1033,14 +1033,14 @@ with utils.clean_op_env():
                             self.loggerSet.emergency(resultObject.Exception)
                     except Exception as e:
                         _,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                        msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
+                        msg = ";> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
                         self.loggerSet.emergency(msg)
                         logy.send(msg)
 
         except Exception as e:
             exceptionString = str(e)
             _,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            logy.emergency(":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
+            logy.emergency("|> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
 
         if self.perScan:
             self.perScan()
