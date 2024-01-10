@@ -28,12 +28,13 @@ class app(Logger):
 
     def __write_out(self, object:RepoObject, second_pathing_argument):
         try:
-            object.frame.to_pickle(
-                self.file_name(object, second_pathing_argument, suffix=".pkl")
-            )
+            file_name = self.file_name(object, second_pathing_argument, suffix=".pkl")
+
+            print("Saving to: {0}".format(file_name))
+            object.frame.to_pickle(file_name)
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            msg = ":> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
+            msg = ":> HIt an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno)
             print(msg)
         return True
 
