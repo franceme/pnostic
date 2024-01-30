@@ -44,6 +44,8 @@ class app(Runner):
 		self.tools = tools
 		self.top_logprobs = top_logprobs
 		self.top_p = top_p
+
+		#Manual String Patching Method
 		self.fix_response = fix_response
 
 		self.imports += [
@@ -51,7 +53,6 @@ class app(Runner):
 			"tqdm==4.66.1",
 			"backoff==2.2.1"
 		]
-		self.imports += self.browser.imports
 		self.client = None
 
 	def initialize(self) -> bool:
@@ -143,18 +144,6 @@ class app(Runner):
 		self.top_logprobs = self.top_logprobs or NotGiven()
 		self.top_p = self.top_p or NotGiven()
 
-		messages = []
-		if self.prefix_for_prompt:
-			messages += [{
-				"role": "system",
-				"content": self.prefix_for_prompt,
-			}]
-
-		messages += [{
-			"role":"user",
-			"content":user_content
-		}]
-
 		startDateTime = None
 		endDateTime = None
 		chat_completion = None
@@ -164,7 +153,7 @@ class app(Runner):
 			try:
 				#https://github.com/openai/openai-python/blob/0c1e58d511bd60c4dd47ea8a8c0820dc2d013d1d/src/openai/resources/chat/completions.py#L42
 				chat_completion = self.__api_wrapped_request(
-					messages=messages,
+					messages=self.prep_messages(user_content),
 					model=self.openapi_model,
 					#Extra Parameters for OpenAI
 					frequency_penalty = self.frequency_penalty,
