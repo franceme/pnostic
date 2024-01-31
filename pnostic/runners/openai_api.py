@@ -86,7 +86,7 @@ class app(Runner):
 
 		return False
 
-	def __api_wrapped_request(self, **kwargs):
+	def __api_wrapped_request(self,messages, model, frequency_penalty, function_call, functions, logit_bias, logprobs, max_tokens, n, presence_penalty, response_format, seed, stop, temperature, tool_choice, tools, top_logprobs, top_p):
 		try:
 			from openai import OpenAI
 		except:
@@ -105,7 +105,7 @@ class app(Runner):
 		while True:
 			try:
 				startDateTime = mystring.current_date()
-				resp =  self.client.chat.completions.create(**kwargs)
+				resp =  self.client.chat.completions.create(messages, model, frequency_penalty, function_call, functions, logit_bias, logprobs, max_tokens, n, presence_penalty, response_format, seed, stop, temperature, tool_choice, tools, top_logprobs, top_p)
 				endDateTime = mystring.current_date()
 
 			# Retry on specific errors
