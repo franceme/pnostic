@@ -103,7 +103,7 @@ class app(Runner):
 		#Lazily Taken from https://platform.openai.com/docs/guides/rate-limits/error-mitigation?context=tier-free
 		@backoff.on_exception(backoff.expo, openai.RateLimitError,on_backoff=backoff_hdlr)
 		def completions_with_backoff(client=None,**kwargs):
-			return client.chat.completions.create.completions.create(**kwargs)
+			return client.chat.completions.create(**kwargs)
 	
 		resp = None
 		startDateTime = mystring.current_date()
@@ -116,8 +116,9 @@ class app(Runner):
 			util_log("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
 		endDateTime = mystring.current_date()
 
-		resp.startDateTime = startDateTime
-		resp.endDateTime = endDateTime
+		if resp is not None:
+			resp.startDateTime = startDateTime
+			resp.endDateTime = endDateTime
 
 		return resp
 
@@ -193,7 +194,10 @@ class app(Runner):
 						top_p = self.top_p
 					)
 					endDateTime = mystring.current_date()
-					if self.__api_request_STALLED(chat_completion):
+					if chat_completion is None:
+						util_log("The chat_completions is None")
+						break
+					elif self.__api_request_STALLED(chat_completion):
 						chat_completion = None
 					else:
 						#https://github.com/openai/openai-python/blob/0c1e58d511bd60c4dd47ea8a8c0820dc2d013d1d/examples/demo.py#L19
