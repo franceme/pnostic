@@ -205,7 +205,7 @@ class app(Runner):
 	def scan(self, filePath: str) -> List[RepoResultObject]:
 		import json
 
-		with open(file, "r") as reader:
+		with open(filePath, "r") as reader:
 			content = '\n'.join(reader.readlines())
 
 		chat_and_full = self.__api_request("")
