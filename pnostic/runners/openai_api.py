@@ -2,6 +2,11 @@ from typing import List
 import mystring
 from pnostic.structure import RepoResultObject, Runner
 
+def util_log(string,foil="procedure_log.txt"):
+	print(string)
+	with open(foil, "a+") as writer:
+		writer.write("Openai_API Runner Log:> " + str(string))
+
 class app(Runner):
 	def __init__(self, openapi_key="", openapi_model="", prefix_for_prompt="",
 			frequency_penalty=None, #: Optional[float] | NotGiven = NOT_GIVEN,
@@ -56,7 +61,7 @@ class app(Runner):
 		self.client = None
 
 	def initialize(self) -> bool:
-		print("Initializing")
+		util_log("Initializing")
 		try:
 			from openai import OpenAI
 		except:
@@ -192,23 +197,23 @@ class app(Runner):
 						endDateTime = chat_completion.endDateTime
 						chat_completion = chat_completion.choices[0].messages.content
 				except openai.APIConnectionError as e:
-					print("The server could not be reached")
-					print(e.__cause__)  # an underlying Exception, likely raised within httpx.
+					util_log("The server could not be reached")
+					util_log(e.__cause__)  # an underlying Exception, likely raised within httpx.
 					break
 				except openai.RateLimitError as e:
-					print("A 429 status code was received; we should back off a bit.")
+					util_log("A 429 status code was received; we should back off a bit.")
 					for _ in tqdm(range(60*5)):
 						time.sleep(1)
 				except openai.APIStatusError as e:
-					print("Another non-200-range status code was received")
-					print(e.status_code)
-					print(e.response)
+					util_log("Another non-200-range status code was received")
+					util_log(e.status_code)
+					util_log(e.response)
 					break
 		except Exception as e:
 			import os,sys
 			exceptionString = str(e)
 			_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-			print("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
+			util_log("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
 
 		return {
 			"CHAT":chat_completion,
@@ -266,14 +271,14 @@ class app(Runner):
 			import os,sys
 			exceptionString = str(e)
 			_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-			print("||> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
+			util_log("||> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
 			return []
 
 	def name(self) -> mystring.string:
 		return mystring.string.of("OpenAPI_{0}".format(self.openapi_model))
 
 	def clean(self) -> bool:
-		print("Cleaning")
+		util_log("Cleaning")
 		self.client = None
 		return True
 
