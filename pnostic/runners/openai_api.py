@@ -9,10 +9,11 @@ def util_log(string,foil="procedure_log.txt"):
 		writer.write("Openai_API Runner Log:> " + str(string))
 
 def timing():
-	import time
 	print("[",end='',flush=True)
 	while True:
-		time.sleep(5)
+		#Created a manual delay
+		for _ in range(100_000):
+			k=1
 		print('.',end='',flush=True)
 
 class app(Runner):
