@@ -55,8 +55,7 @@ class app(Runner):
 
 		self.imports += [
 			"openai==1.10.0", #https://github.com/openai/openai-python
-			"tqdm==4.66.1",
-			"backoff==2.2.1"
+			"tqdm==4.66.1"
 		]
 		self.client = None
 
@@ -93,28 +92,48 @@ class app(Runner):
 		except:
 			os.system("{sys.executable} -m pip install --upgrade {1}".format(sys.executable, " ".join(self.imports)))
 			from openai import OpenAI
-		import backoff
 		import openai
+		from tqdm import tqdm
 
-		#Lazily Taken from https://github.com/litl/backoff
-		def backoff_hdlr(details):
-			print ("Backing off {wait:0.1f} seconds after {tries} tries calling function {target} with args {args} and kwargs {kwargs}".format(**details))
+		initial_delay = 1;exponential_base = 2;jitter = True
+		max_retries = 20;errors = (openai.RateLimitError,);resp = None
+		num_retries = 0;delay = initial_delay;startDateTime = None
+		endDateTime = None
 
-		#Lazily Taken from https://platform.openai.com/docs/guides/rate-limits/error-mitigation?context=tier-free
-		@backoff.on_exception(backoff.expo, openai.RateLimitError,on_backoff=backoff_hdlr)
-		def completions_with_backoff(client=None,**kwargs):
-			return client.chat.completions.create(**kwargs)
-	
-		resp = None
-		startDateTime = mystring.current_date()
-		try:
-			resp =  completions_with_backoff(client=self.client, **kwargs)
-		except Exception as e:
-			import os,sys
-			exceptionString = str(e)
-			_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-			util_log("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
-		endDateTime = mystring.current_date()
+		#Taken From https://platform.openai.com/docs/guides/rate-limits/error-mitigation?context=tier-free
+		# Loop until a successful response or max_retries is hit or an exception is raised
+		while True:
+			try:
+				startDateTime = mystring.current_date()
+				resp =  self.client.chat.completions.create(**kwargs)
+				endDateTime = mystring.current_date()
+
+			# Retry on specific errors
+			except errors as e:
+				print("Waiting")
+				# Increment retries
+				num_retries += 1
+
+				# Check if max retries has been reached
+				if num_retries > max_retries:
+					raise Exception(
+						f"Maximum number of retries ({max_retries}) exceeded."
+					)
+
+				# Increment the delay
+				delay *= exponential_base * (1 + jitter * random.random())
+
+				# Sleep for the delay
+				#time.sleep(delay)
+				for _ in tqdm(range(delay+1)):
+					time.sleep(1)
+
+			# Raise exceptions for any errors not specified
+			except Exception as e:
+				import os,sys
+				exceptionString = str(e)
+				_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+				util_log("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
 
 		if resp is not None:
 			resp.startDateTime = startDateTime
@@ -274,7 +293,7 @@ class app(Runner):
 				FN=0,
 				dateTimeFormat="ISO",
 				startDateTime=str(mystring.now_utc_to_iso()) if startDateTime is None else str(mystring.date_to_iso(startDateTime)),
-				endDateTime=str(mystring.now_utc_to_iso()) if endDateTime is None else sstr(mystring.date_to_iso(endDateTime)),
+				endDateTime=str(mystring.now_utc_to_iso()) if endDateTime is None else str(mystring.date_to_iso(endDateTime)),
 			)]
 		except Exception as e:
 			import os,sys
