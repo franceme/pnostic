@@ -1,11 +1,19 @@
 from typing import List
 import mystring
 from pnostic.structure import RepoResultObject, Runner
+from multiprocessing import Process
 
 def util_log(string,foil="procedure_log.txt"):
 	print(string)
 	with open(foil, "a+") as writer:
 		writer.write("Openai_API Runner Log:> " + str(string))
+
+def timing():
+	import time
+	print("[",end='',flush=True)
+	while True:
+		time.sleep(5)
+		print('.',end='',flush=True)
 
 class app(Runner):
 	def __init__(self, openapi_key="", openapi_model="", prefix_for_prompt="",
@@ -66,9 +74,20 @@ class app(Runner):
 		except:
 			os.system("{sys.executable} -m pip install --upgrade {1}".format(sys.executable, " ".join(self.imports)))
 			from openai import OpenAI
-		self.client = OpenAI(
-			api_key=self.openapi_key,
-		)
+		
+		try:
+			pager = Process(target=timing,args=())
+			pager.start()
+			self.client = OpenAI(
+				api_key=self.openapi_key,
+			)
+			pager.terminate()
+		except Exception as e:
+			import os,sys
+			exceptionString = str(e)
+			_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+			util_log("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
+			util_log(e)
 		return True
 
 	@staticmethod
@@ -93,6 +112,7 @@ class app(Runner):
 			os.system("{sys.executable} -m pip install --upgrade {1}".format(sys.executable, " ".join(self.imports)))
 			from openai import OpenAI
 		import openai
+		from openai._types import NotGiven
 		from tqdm import tqdm
 
 		initial_delay = 1;exponential_base = 2;jitter = True
@@ -100,33 +120,68 @@ class app(Runner):
 		num_retries = 0;delay = initial_delay;startDateTime = None
 		endDateTime = None
 
+		dict_args = {}
+		if messages is not None and messages != NotGiven() and not isinstance(messages, NotGiven):
+			dict_args["messages"] = messages
+
+		if model is not None and model != NotGiven() and not isinstance(model, NotGiven):
+			dict_args["model"] = model
+
+		if frequency_penalty is not None and frequency_penalty != NotGiven() and not isinstance(frequency_penalty, NotGiven):
+			dict_args["frequency_penalty"] = frequency_penalty
+
+		if function_call is not None and function_call != NotGiven() and not isinstance(function_call, NotGiven):
+			dict_args["function_call"] = function_call
+
+		if functions is not None and functions != NotGiven() and not isinstance(functions, NotGiven):
+			dict_args["functions"] = functions
+
+		if logit_bias is not None and logit_bias != NotGiven() and not isinstance(logit_bias, NotGiven):
+			dict_args["logit_bias"] = logit_bias
+
+		if logprobs is not None and logprobs != NotGiven() and not isinstance(logprobs, NotGiven):
+			dict_args["logprobs"] = logprobs
+
+		if max_tokens is not None and max_tokens != NotGiven() and not isinstance(max_tokens, NotGiven):
+			dict_args["max_tokens"] = max_tokens
+
+		if n is not None and n != NotGiven() and not isinstance(n, NotGiven):
+			dict_args["n"] = n
+
+		if presence_penalty is not None and presence_penalty != NotGiven() and not isinstance(presence_penalty, NotGiven):
+			dict_args["presence_penalty"] = presence_penalty
+
+		if response_format is not None and response_format != NotGiven() and not isinstance(response_format, NotGiven):
+			dict_args["response_format"] = response_format
+
+		if seed is not None and seed != NotGiven() and not isinstance(seed, NotGiven):
+			dict_args["seed"] = seed
+
+		if stop is not None and stop != NotGiven() and not isinstance(stop, NotGiven):
+			dict_args["stop"] = stop
+
+		if temperature is not None and temperature != NotGiven() and not isinstance(temperature, NotGiven):
+			dict_args["temperature"] = temperature
+
+		if tool_choice is not None and tool_choice != NotGiven() and not isinstance(tool_choice, NotGiven):
+			dict_args["tool_choice"] = tool_choice
+
+		if tools is not None and tools != NotGiven() and not isinstance(tools, NotGiven):
+			dict_args["tools"] = tools
+
+		if top_logprobs is not None and top_logprobs != NotGiven() and not isinstance(top_logprobs, NotGiven):
+			dict_args["top_logprobs"] = top_logprobs
+
+		if top_p is not None and top_p != NotGiven() and not isinstance(top_p, NotGiven):
+			dict_args["top_p"] = top_p
+
+
 		#Taken From https://platform.openai.com/docs/guides/rate-limits/error-mitigation?context=tier-free
 		# Loop until a successful response or max_retries is hit or an exception is raised
 		while True:
 			try:
 				startDateTime = mystring.current_date()
-				resp =  self.client.chat.completions.create(
-					**{
-						"messages":messages, 
-						"model":model, 
-						"frequency_penalty":frequency_penalty, 
-						"function_call":function_call, 
-						"functions":functions, 
-						"logit_bias":logit_bias, 
-						"logprobs":logprobs, 
-						"max_tokens":max_tokens, 
-						"n":n, 
-						"presence_penalty":presence_penalty, 
-						"response_format":response_format, 
-						"seed":seed, 
-						"stop":stop, 
-						"temperature":temperature, 
-						"tool_choice":tool_choice, 
-						"tools":tools, 
-						"top_logprobs":top_logprobs, 
-						"top_p":top_p
-					}
-				)
+				resp =  self.client.chat.completions.create(**dict_args)
 				endDateTime = mystring.current_date()
 
 			# Retry on specific errors
