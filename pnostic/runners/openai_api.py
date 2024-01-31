@@ -130,79 +130,84 @@ class app(Runner):
 		return messages
 
 	def __api_request(self,user_content):
-		import time
-		from tqdm import tqdm
-		from openai import OpenAI
-		from openai._types import NotGiven
-
-		#Setting the extra parameters for OpenAI to NotGiven if None
-		self.frequency_penalty = self.frequency_penalty or NotGiven()
-		self.function_call = self.function_call or NotGiven()
-		self.functions = self.functions or NotGiven()
-		self.logit_bias = self.logit_bias or NotGiven()
-		self.logprobs = self.logprobs or NotGiven()
-		self.max_tokens = self.max_tokens or NotGiven()
-		self.n = self.n or NotGiven()
-		self.presence_penalty = self.presence_penalty or NotGiven()
-		self.response_format = self.response_format or NotGiven()
-		self.seed = self.seed or NotGiven()
-		self.stop = self.stop or NotGiven()
-		self.temperature = self.temperature or NotGiven()
-		self.tool_choice = self.tool_choice or NotGiven()
-		self.tools = self.tools or NotGiven()
-		self.top_logprobs = self.top_logprobs or NotGiven()
-		self.top_p = self.top_p or NotGiven()
-
 		startDateTime = None
 		endDateTime = None
 		chat_completion = None
 		full_response = None
 
-		while chat_completion is None:
-			try:
-				#https://github.com/openai/openai-python/blob/0c1e58d511bd60c4dd47ea8a8c0820dc2d013d1d/src/openai/resources/chat/completions.py#L42
-				chat_completion = self.__api_wrapped_request(
-					messages=self.prep_messages(user_content),
-					model=self.openapi_model,
-					#Extra Parameters for OpenAI
-					frequency_penalty = self.frequency_penalty,
-					function_call = self.function_call,
-					functions = self.functions,
-					logit_bias = self.logit_bias,
-					logprobs = self.logprobs,
-					max_tokens = self.max_tokens,
-					n = self.n,
-					presence_penalty = self.presence_penalty,
-					response_format = self.response_format,
-					seed = self.seed,
-					stop = self.stop,
-					temperature = self.temperature,
-					tool_choice = self.tool_choice,
-					tools = self.tools,
-					top_logprobs = self.top_logprobs,
-					top_p = self.top_p
-				)
-				if self.__api_request_STALLED(chat_completion):
-					chat_completion = None
-				else:
-					#https://github.com/openai/openai-python/blob/0c1e58d511bd60c4dd47ea8a8c0820dc2d013d1d/examples/demo.py#L19
-					full_response = str(chat_completion)
-					startDateTime = chat_completion.startDateTime
-					endDateTime = chat_completion.endDateTime
-					chat_completion = chat_completion.choices[0].messages.content
-			except openai.APIConnectionError as e:
-				print("The server could not be reached")
-				print(e.__cause__)  # an underlying Exception, likely raised within httpx.
-				break
-			except openai.RateLimitError as e:
-				print("A 429 status code was received; we should back off a bit.")
-				for _ in tqdm(range(60*5)):
-					time.sleep(1)
-			except openai.APIStatusError as e:
-				print("Another non-200-range status code was received")
-				print(e.status_code)
-				print(e.response)
-				break
+		try:
+			import time
+			from tqdm import tqdm
+			from openai import OpenAI
+			from openai._types import NotGiven
+
+			#Setting the extra parameters for OpenAI to NotGiven if None
+			self.frequency_penalty = self.frequency_penalty or NotGiven()
+			self.function_call = self.function_call or NotGiven()
+			self.functions = self.functions or NotGiven()
+			self.logit_bias = self.logit_bias or NotGiven()
+			self.logprobs = self.logprobs or NotGiven()
+			self.max_tokens = self.max_tokens or NotGiven()
+			self.n = self.n or NotGiven()
+			self.presence_penalty = self.presence_penalty or NotGiven()
+			self.response_format = self.response_format or NotGiven()
+			self.seed = self.seed or NotGiven()
+			self.stop = self.stop or NotGiven()
+			self.temperature = self.temperature or NotGiven()
+			self.tool_choice = self.tool_choice or NotGiven()
+			self.tools = self.tools or NotGiven()
+			self.top_logprobs = self.top_logprobs or NotGiven()
+			self.top_p = self.top_p or NotGiven()
+
+			while chat_completion is None:
+				try:
+					#https://github.com/openai/openai-python/blob/0c1e58d511bd60c4dd47ea8a8c0820dc2d013d1d/src/openai/resources/chat/completions.py#L42
+					chat_completion = self.__api_wrapped_request(
+						messages=self.prep_messages(user_content),
+						model=self.openapi_model,
+						#Extra Parameters for OpenAI
+						frequency_penalty = self.frequency_penalty,
+						function_call = self.function_call,
+						functions = self.functions,
+						logit_bias = self.logit_bias,
+						logprobs = self.logprobs,
+						max_tokens = self.max_tokens,
+						n = self.n,
+						presence_penalty = self.presence_penalty,
+						response_format = self.response_format,
+						seed = self.seed,
+						stop = self.stop,
+						temperature = self.temperature,
+						tool_choice = self.tool_choice,
+						tools = self.tools,
+						top_logprobs = self.top_logprobs,
+						top_p = self.top_p
+					)
+					if self.__api_request_STALLED(chat_completion):
+						chat_completion = None
+					else:
+						#https://github.com/openai/openai-python/blob/0c1e58d511bd60c4dd47ea8a8c0820dc2d013d1d/examples/demo.py#L19
+						full_response = str(chat_completion)
+						startDateTime = chat_completion.startDateTime
+						endDateTime = chat_completion.endDateTime
+						chat_completion = chat_completion.choices[0].messages.content
+				except openai.APIConnectionError as e:
+					print("The server could not be reached")
+					print(e.__cause__)  # an underlying Exception, likely raised within httpx.
+					break
+				except openai.RateLimitError as e:
+					print("A 429 status code was received; we should back off a bit.")
+					for _ in tqdm(range(60*5)):
+						time.sleep(1)
+				except openai.APIStatusError as e:
+					print("Another non-200-range status code was received")
+					print(e.status_code)
+					print(e.response)
+					break
+		except Exception as e:
+			exceptionString = str(e)
+			_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+			logy.emergency("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
 
 		return {
 			"CHAT":chat_completion,
@@ -212,49 +217,55 @@ class app(Runner):
 		}
 
 	def scan(self, filePath: str) -> List[RepoResultObject]:
-		import json
+		try:
+			import json
 
-		with open(filePath, "r") as reader:
-			content = '\n'.join(reader.readlines())
+			with open(filePath, "r") as reader:
+				content = '\n'.join(reader.readlines())
 
-		chat_and_full = self.__api_request("")
-		chat,raw,startDateTime,endDateTime = chat_and_full["CHAT"],chat_and_full["FULL"],chat_and_full["START"],chat_and_full["STOP"]
+			chat_and_full = self.__api_request("")
+			chat,raw,startDateTime,endDateTime = chat_and_full["CHAT"],chat_and_full["FULL"],chat_and_full["START"],chat_and_full["STOP"]
 
-		return [RepoResultObject(
-			projecttype="",
-			projectname=self.name(),
-			projecturl="",
-			qual_name="",
-			tool_name=self.name(),
-			Program_Lines=-1,
-			Total_Lines=content.count("\n"),
-			Number_of_Imports=-1,
-			MCC=-1,
-			IsVuln=None,
-			ruleID=None,
-			cryptolationID=-1,
-			CWEId=None,
-			Message=mystring.obj_to_string(raw, prefix="json:").tobase64(prefix="b64:"),
-			Exception=None,
-			llmPrompt=mystring.string.of(
-				self.prep_messages(content)
-			).tobase64(prefix="b64:"),
-			llmResponse=mystring.string.of(chat).tobase64(prefix="b64:"),
-			extraToolInfo="",
-			fileContent=mystring.string.of(content).tobase64(prefix="b64:"),
-			Line=-1,
-			correctedCode=None,
-			severity="",
-			confidence="",
-			context="",
-			TP=0,
-			FP=0,
-			TN=0,
-			FN=0,
-			dateTimeFormat="ISO",
-			startDateTime=str(mystring.date_to_iso(startDateTime)),
-			endDateTime=str(mystring.date_to_iso(endDateTime)),
-		)]
+			return [RepoResultObject(
+				projecttype="",
+				projectname=self.name(),
+				projecturl="",
+				qual_name="",
+				tool_name=self.name(),
+				Program_Lines=-1,
+				Total_Lines=content.count("\n"),
+				Number_of_Imports=-1,
+				MCC=-1,
+				IsVuln=None,
+				ruleID=None,
+				cryptolationID=-1,
+				CWEId=None,
+				Message=mystring.obj_to_string(raw, prefix="json:").tobase64(prefix="b64:"),
+				Exception=None,
+				llmPrompt=mystring.string.of(
+					self.prep_messages(content)
+				).tobase64(prefix="b64:"),
+				llmResponse=mystring.string.of(chat).tobase64(prefix="b64:"),
+				extraToolInfo="",
+				fileContent=mystring.string.of(content).tobase64(prefix="b64:"),
+				Line=-1,
+				correctedCode=None,
+				severity="",
+				confidence="",
+				context="",
+				TP=0,
+				FP=0,
+				TN=0,
+				FN=0,
+				dateTimeFormat="ISO",
+				startDateTime=str(mystring.date_to_iso(startDateTime)),
+				endDateTime=str(mystring.date_to_iso(endDateTime)),
+			)]
+		except Exception as e:
+			exceptionString = str(e)
+			_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+			logy.emergency("||> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
+			return []
 
 	def name(self) -> mystring.string:
 		return mystring.string.of("OpenAPI_{0}".format(self.openapi_model))
