@@ -57,7 +57,11 @@ class app(Runner):
 
 	def initialize(self) -> bool:
 		print("Initializing")
-		from openai import OpenAI
+		try:
+			from openai import OpenAI
+		except:
+			os.system("{sys.executable} -m pip install --upgrade {1}".format(sys.executable, " ".join(self.imports)))
+			from openai import OpenAI
 		self.client = OpenAI(
 			api_key=self.openapi_key,
 		)
@@ -79,6 +83,11 @@ class app(Runner):
 		return False
 
 	def __api_wrapped_request(self, **kwargs):
+		try:
+			from openai import OpenAI
+		except:
+			os.system("{sys.executable} -m pip install --upgrade {1}".format(sys.executable, " ".join(self.imports)))
+			from openai import OpenAI
 		import backoff
 		import openai
 

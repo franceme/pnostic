@@ -97,6 +97,11 @@ class app(Runner):
 		chat_completion = None
 		full_response = None
 
+		try:
+			from ollama import Client
+		except:
+			os.system("{sys.executable} -m pip install --upgrade {1}".format(sys.executable, " ".join(self.imports)))
+
 		while chat_completion is None:
 			try:
 				#https://github.com/openai/openai-python/blob/0c1e58d511bd60c4dd47ea8a8c0820dc2d013d1d/src/openai/resources/chat/completions.py#L42
