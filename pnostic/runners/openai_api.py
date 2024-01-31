@@ -96,22 +96,24 @@ class app(Runner):
 		import backoff
 		import openai
 
-		current_client = self.client
-
 		#Lazily Taken from https://github.com/litl/backoff
 		def backoff_hdlr(details):
-			print ("Backing off {wait:0.1f} seconds after {tries} tries "
-				"calling function {target} with args {args} and kwargs "
-				"{kwargs}".format(**details))
+			print ("Backing off {wait:0.1f} seconds after {tries} tries calling function {target} with args {args} and kwargs {kwargs}".format(**details))
 
 		#Lazily Taken from https://platform.openai.com/docs/guides/rate-limits/error-mitigation?context=tier-free
 		@backoff.on_exception(backoff.expo, openai.RateLimitError,on_backoff=backoff_hdlr)
-		def completions_with_backoff(**kwargs):
-			return current_client.chat.completions.create.completions.create(**kwargs)
+		def completions_with_backoff(client=None,**kwargs):
+			return client.chat.completions.create.completions.create(**kwargs)
 	
-		
+		resp = None
 		startDateTime = mystring.current_date()
-		resp =  completions_with_backoff(**kwargs)
+		try:
+			resp =  completions_with_backoff(client=self.client, **kwargs)
+		except Exception as e:
+			import os,sys
+			exceptionString = str(e)
+			_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+			util_log("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
 		endDateTime = mystring.current_date()
 
 		resp.startDateTime = startDateTime
