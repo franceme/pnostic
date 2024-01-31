@@ -143,6 +143,7 @@ class app(Runner):
 		try:
 			import time
 			from tqdm import tqdm
+			import openai
 			from openai import OpenAI
 			from openai._types import NotGiven
 
@@ -166,6 +167,7 @@ class app(Runner):
 
 			while chat_completion is None:
 				try:
+					startDateTime = mystring.current_date()
 					#https://github.com/openai/openai-python/blob/0c1e58d511bd60c4dd47ea8a8c0820dc2d013d1d/src/openai/resources/chat/completions.py#L42
 					chat_completion = self.__api_wrapped_request(
 						messages=self.prep_messages(user_content),
@@ -188,6 +190,7 @@ class app(Runner):
 						top_logprobs = self.top_logprobs,
 						top_p = self.top_p
 					)
+					endDateTime = mystring.current_date()
 					if self.__api_request_STALLED(chat_completion):
 						chat_completion = None
 					else:
@@ -264,8 +267,8 @@ class app(Runner):
 				TN=0,
 				FN=0,
 				dateTimeFormat="ISO",
-				startDateTime=str(mystring.date_to_iso(startDateTime)),
-				endDateTime=str(mystring.date_to_iso(endDateTime)),
+				startDateTime=str(mystring.now_utc_to_iso()) if startDateTime is None else str(mystring.date_to_iso(startDateTime)),
+				endDateTime=str(mystring.now_utc_to_iso()) if endDateTime is None else sstr(mystring.date_to_iso(endDateTime)),
 			)]
 		except Exception as e:
 			import os,sys
