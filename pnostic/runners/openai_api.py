@@ -105,7 +105,28 @@ class app(Runner):
 		while True:
 			try:
 				startDateTime = mystring.current_date()
-				resp =  self.client.chat.completions.create(messages, model, frequency_penalty, function_call, functions, logit_bias, logprobs, max_tokens, n, presence_penalty, response_format, seed, stop, temperature, tool_choice, tools, top_logprobs, top_p)
+				resp =  self.client.chat.completions.create(
+					**{
+						"messages":messages, 
+						"model":model, 
+						"frequency_penalty":frequency_penalty, 
+						"function_call":function_call, 
+						"functions":functions, 
+						"logit_bias":logit_bias, 
+						"logprobs":logprobs, 
+						"max_tokens":max_tokens, 
+						"n":n, 
+						"presence_penalty":presence_penalty, 
+						"response_format":response_format, 
+						"seed":seed, 
+						"stop":stop, 
+						"temperature":temperature, 
+						"tool_choice":tool_choice, 
+						"tools":tools, 
+						"top_logprobs":top_logprobs, 
+						"top_p":top_p
+					}
+				)
 				endDateTime = mystring.current_date()
 
 			# Retry on specific errors
