@@ -92,7 +92,7 @@ class app(Runner):
 		return True
 
 	@staticmethod
-	def __api_request_STALLED(response):
+	def api_request_STALLED(response):
 		for string in [
 			"I couldn't complete your request.",
 			"Rephrase your prompt",
@@ -296,7 +296,7 @@ class app(Runner):
 					if chat_completion is None:
 						util_log("The chat_completions is None")
 						break
-					elif self.__api_request_STALLED(chat_completion):
+					elif self.api_request_STALLED(chat_completion):
 						chat_completion = None
 					else:
 						#https://github.com/openai/openai-python/blob/0c1e58d511bd60c4dd47ea8a8c0820dc2d013d1d/examples/demo.py#L19
