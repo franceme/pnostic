@@ -100,9 +100,11 @@ class app(Runner):
 			"I'm unable to help",
 			"I can't help you with that",
 			"I'm unable to",
+			"I'm sorry, but as an AI",
 		]:
-			if string in response:
-				return True
+			for shiftr in [lambda x:x, lambda x:x.lower(), lambda x:x.upper()]:
+				if shiftr(string) in shiftr(response):
+					return True
 
 		return False
 
