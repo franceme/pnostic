@@ -182,6 +182,7 @@ class app(Runner):
 		#Taken From https://platform.openai.com/docs/guides/rate-limits/error-mitigation?context=tier-free
 		# Loop until a successful response or max_retries is hit or an exception is raised
 		while True:
+			import random
 			try:
 				startDateTime = mystring.current_date()
 				resp =  self.client.chat.completions.create(**dict_args)
