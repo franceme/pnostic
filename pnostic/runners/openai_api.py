@@ -210,6 +210,7 @@ class app(Runner):
 					# Sleep for the delay
 					#time.sleep(delay)
 					for _ in tqdm(range(int(delay)+1)):
+						import time
 						time.sleep(1)
 
 				# Raise exceptions for any errors not specified
