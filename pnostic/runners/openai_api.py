@@ -121,103 +121,111 @@ class app(Runner):
 		from openai._types import NotGiven
 		from tqdm import tqdm
 
-		initial_delay = 1;exponential_base = 2;jitter = True
-		max_retries = 20;errors = (openai.RateLimitError,);resp = None
-		num_retries = 0;delay = initial_delay;startDateTime = None
-		endDateTime = None
+		try:
+			initial_delay = 1;exponential_base = 2;jitter = True
+			max_retries = 20;errors = (openai.RateLimitError,);resp = None
+			num_retries = 0;delay = initial_delay;startDateTime = None
+			endDateTime = None
 
-		dict_args = {}
-		if messages is not None and messages != NotGiven() and not isinstance(messages, NotGiven):
-			dict_args["messages"] = messages
+			dict_args = {}
+			if messages is not None and messages != NotGiven() and not isinstance(messages, NotGiven):
+				dict_args["messages"] = messages
 
-		if model is not None and model != NotGiven() and not isinstance(model, NotGiven):
-			dict_args["model"] = model
+			if model is not None and model != NotGiven() and not isinstance(model, NotGiven):
+				dict_args["model"] = model
 
-		if frequency_penalty is not None and frequency_penalty != NotGiven() and not isinstance(frequency_penalty, NotGiven):
-			dict_args["frequency_penalty"] = frequency_penalty
+			if frequency_penalty is not None and frequency_penalty != NotGiven() and not isinstance(frequency_penalty, NotGiven):
+				dict_args["frequency_penalty"] = frequency_penalty
 
-		if function_call is not None and function_call != NotGiven() and not isinstance(function_call, NotGiven):
-			dict_args["function_call"] = function_call
+			if function_call is not None and function_call != NotGiven() and not isinstance(function_call, NotGiven):
+				dict_args["function_call"] = function_call
 
-		if functions is not None and functions != NotGiven() and not isinstance(functions, NotGiven):
-			dict_args["functions"] = functions
+			if functions is not None and functions != NotGiven() and not isinstance(functions, NotGiven):
+				dict_args["functions"] = functions
 
-		if logit_bias is not None and logit_bias != NotGiven() and not isinstance(logit_bias, NotGiven):
-			dict_args["logit_bias"] = logit_bias
+			if logit_bias is not None and logit_bias != NotGiven() and not isinstance(logit_bias, NotGiven):
+				dict_args["logit_bias"] = logit_bias
 
-		if logprobs is not None and logprobs != NotGiven() and not isinstance(logprobs, NotGiven):
-			dict_args["logprobs"] = logprobs
+			if logprobs is not None and logprobs != NotGiven() and not isinstance(logprobs, NotGiven):
+				dict_args["logprobs"] = logprobs
 
-		if max_tokens is not None and max_tokens != NotGiven() and not isinstance(max_tokens, NotGiven):
-			dict_args["max_tokens"] = max_tokens
+			if max_tokens is not None and max_tokens != NotGiven() and not isinstance(max_tokens, NotGiven):
+				dict_args["max_tokens"] = max_tokens
 
-		if n is not None and n != NotGiven() and not isinstance(n, NotGiven):
-			dict_args["n"] = n
+			if n is not None and n != NotGiven() and not isinstance(n, NotGiven):
+				dict_args["n"] = n
 
-		if presence_penalty is not None and presence_penalty != NotGiven() and not isinstance(presence_penalty, NotGiven):
-			dict_args["presence_penalty"] = presence_penalty
+			if presence_penalty is not None and presence_penalty != NotGiven() and not isinstance(presence_penalty, NotGiven):
+				dict_args["presence_penalty"] = presence_penalty
 
-		if response_format is not None and response_format != NotGiven() and not isinstance(response_format, NotGiven):
-			dict_args["response_format"] = response_format
+			if response_format is not None and response_format != NotGiven() and not isinstance(response_format, NotGiven):
+				dict_args["response_format"] = response_format
 
-		if seed is not None and seed != NotGiven() and not isinstance(seed, NotGiven):
-			dict_args["seed"] = seed
+			if seed is not None and seed != NotGiven() and not isinstance(seed, NotGiven):
+				dict_args["seed"] = seed
 
-		if stop is not None and stop != NotGiven() and not isinstance(stop, NotGiven):
-			dict_args["stop"] = stop
+			if stop is not None and stop != NotGiven() and not isinstance(stop, NotGiven):
+				dict_args["stop"] = stop
 
-		if temperature is not None and temperature != NotGiven() and not isinstance(temperature, NotGiven):
-			dict_args["temperature"] = temperature
+			if temperature is not None and temperature != NotGiven() and not isinstance(temperature, NotGiven):
+				dict_args["temperature"] = temperature
 
-		if tool_choice is not None and tool_choice != NotGiven() and not isinstance(tool_choice, NotGiven):
-			dict_args["tool_choice"] = tool_choice
+			if tool_choice is not None and tool_choice != NotGiven() and not isinstance(tool_choice, NotGiven):
+				dict_args["tool_choice"] = tool_choice
 
-		if tools is not None and tools != NotGiven() and not isinstance(tools, NotGiven):
-			dict_args["tools"] = tools
+			if tools is not None and tools != NotGiven() and not isinstance(tools, NotGiven):
+				dict_args["tools"] = tools
 
-		if top_logprobs is not None and top_logprobs != NotGiven() and not isinstance(top_logprobs, NotGiven):
-			dict_args["top_logprobs"] = top_logprobs
+			if top_logprobs is not None and top_logprobs != NotGiven() and not isinstance(top_logprobs, NotGiven):
+				dict_args["top_logprobs"] = top_logprobs
 
-		if top_p is not None and top_p != NotGiven() and not isinstance(top_p, NotGiven):
-			dict_args["top_p"] = top_p
+			if top_p is not None and top_p != NotGiven() and not isinstance(top_p, NotGiven):
+				dict_args["top_p"] = top_p
 
 
-		#Taken From https://platform.openai.com/docs/guides/rate-limits/error-mitigation?context=tier-free
-		# Loop until a successful response or max_retries is hit or an exception is raised
-		while True:
-			import random
-			try:
-				startDateTime = mystring.current_date()
-				resp =  self.client.chat.completions.create(**dict_args)
-				endDateTime = mystring.current_date()
+			#Taken From https://platform.openai.com/docs/guides/rate-limits/error-mitigation?context=tier-free
+			# Loop until a successful response or max_retries is hit or an exception is raised
+			while True:
+				import random
+				try:
+					startDateTime = mystring.current_date()
+					resp =  self.client.chat.completions.create(**dict_args)
+					endDateTime = mystring.current_date()
 
-			# Retry on specific errors
-			except errors as e:
-				print("Waiting")
-				# Increment retries
-				num_retries += 1
+				# Retry on specific errors
+				except errors as e:
+					print("Waiting")
+					# Increment retries
+					num_retries += 1
 
-				# Check if max retries has been reached
-				if num_retries > max_retries:
-					raise Exception(
-						f"Maximum number of retries ({max_retries}) exceeded."
-					)
+					# Check if max retries has been reached
+					if num_retries > max_retries:
+						raise Exception(
+							f"Maximum number of retries ({max_retries}) exceeded."
+						)
 
-				# Increment the delay
-				delay *= exponential_base * (1 + jitter * random.random())
+					# Increment the delay
+					delay *= exponential_base * (1 + jitter * random.random())
 
-				# Sleep for the delay
-				#time.sleep(delay)
-				for _ in tqdm(range(delay+1)):
-					time.sleep(1)
+					# Sleep for the delay
+					#time.sleep(delay)
+					for _ in tqdm(range(delay+1)):
+						time.sleep(1)
 
-			# Raise exceptions for any errors not specified
-			except Exception as e:
-				import os,sys
-				exceptionString = str(e)
-				_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-				util_log("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
-				util_log(e)
+				# Raise exceptions for any errors not specified
+				except Exception as e:
+					import os,sys
+					exceptionString = str(e)
+					_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+					util_log("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
+					util_log(e)
+
+		except Exception as e:
+			import os,sys
+			exceptionString = str(e)
+			_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+			util_log("|+|>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
+			util_log(e)
 
 		if resp is not None:
 			resp.startDateTime = startDateTime
@@ -227,17 +235,23 @@ class app(Runner):
 
 	def prep_messages(self, source_code):
 		messages = []
-		if self.prefix_for_prompt:
+		try:
+			if self.prefix_for_prompt:
+				messages += [{
+					"role": "system",
+					"content": self.prefix_for_prompt,
+				}]
+
 			messages += [{
-				"role": "system",
-				"content": self.prefix_for_prompt,
+				"role":"user",
+				"content":"SOURCE="+self.fix_response(mystring.string.of(source_code).noNewLine(";"))
 			}]
-
-		messages += [{
-			"role":"user",
-			"content":"SOURCE="+self.fix_response(mystring.string.of(source_code).noNewLine(";"))
-		}]
-
+		except Exception as e:
+			import os,sys
+			exceptionString = str(e)
+			_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+			util_log("|++|>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
+			util_log(e)
 		return messages
 
 	def __api_request(self,user_content):
@@ -321,11 +335,17 @@ class app(Runner):
 					util_log(e.status_code)
 					util_log(e.response)
 					break
+				except Exception as e:
+					import os,sys
+					exceptionString = str(e)
+					_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+					util_log("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
+					util_log(e)
 		except Exception as e:
 			import os,sys
 			exceptionString = str(e)
 			_,_, exc_tb = sys.exc_info();fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-			util_log("||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
+			util_log("|||>> Hit an unexpected error {0} @ {1}:{2}".format(e, fname, exc_tb.tb_lineno))
 
 		return {
 			"CHAT":chat_completion,
