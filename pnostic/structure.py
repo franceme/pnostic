@@ -308,11 +308,32 @@ class RepoResultObject(RepoSifting):
             if attribute not in columns:
                 return None
         
+        
+        #info:Dict[str,any] = {}
+        #for keyitr,key,value in enumerate(RepoResultObject.staticKeyTypeMap().items()):
+        #    info[key] = getattr(builtins,value)(splitLine[keyitr])
+        
+        #return RepoResultObject(**info)
+        return None
+
+    @staticmethod
+    def from_dyct(dyct):
+        attributes:List[str] = list(RepoResultObject.staticKeyTypeMap().keys())
+        columns:List[str] = list(dyct.keys())
+
+        if len(attributes) != len(columns):
+            return None
+        
+        for attribute in attributes:
+            if attribute not in columns:
+                return None
+        
         info:Dict[str,any] = {}
         for keyitr,key,value in enumerate(RepoResultObject.staticKeyTypeMap().items()):
-            info[key] = getattr(builtins,value)(splitLine[keyitr])
+            info[key] = getattr(builtins,value)(dyct[key])
         
         return RepoResultObject(**info)
+
 
 
 class CoreObject(ABC):
