@@ -277,7 +277,7 @@ class RepoResultObject(RepoSifting):
             "startDateTime":str,
             "endDateTime":str,
             "stage":str
-        };
+        }
 
     @staticmethod
     def fromCSVLine(line:mystring.string) -> Union[any,None]:
@@ -292,6 +292,28 @@ class RepoResultObject(RepoSifting):
             info[key] = getattr(builtins,value)(splitLine[keyitr])
 
         return RepoResultObject(**info)
+    
+    @staticmethod
+    def from_frame(frame):
+        if not isinstance(frame, pd.DataFrame) or frame.empty:
+            return None
+
+        attributes:List[str] = list(RepoResultObject.staticKeyTypeMap().keys())
+        columns:List[str] = list(frame.columns)
+
+        if len(attributes) != len(columns):
+            return None
+        
+        for attribute in attributes:
+            if attribute not in columns:
+                return None
+        
+        info:Dict[str,any] = {}
+        for keyitr,key,value in enumerate(RepoResultObject.staticKeyTypeMap().items()):
+            info[key] = getattr(builtins,value)(splitLine[keyitr])
+        
+        return RepoResultObject(**info)
+
 
 class CoreObject(ABC):
     def __init__(self):
