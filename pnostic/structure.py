@@ -281,14 +281,14 @@ class RepoResultObject(RepoSifting):
 
     @staticmethod
     def fromCSVLine(line:mystring.string) -> Union[any,None]:
-        numAttributes:int = len(RepoResultObject.staticKeyTypeMap().keys())
+        numAttributes:int = len(RepoResultObject._internal_staticKeyTypeMap().keys())
         splitLine:List[str] = [x.strip() for x in line.split(",")]
 
         if len(splitLine) != numAttributes:
             return None
 
         info:Dict[str, any] = {}
-        for keyitr,key,value in enumerate(RepoResultObject.staticKeyTypeMap().items()):
+        for keyitr,key,value in enumerate(RepoResultObject._internal_staticKeyTypeMap().items()):
             info[key] = getattr(builtins,value)(splitLine[keyitr])
 
         return RepoResultObject(**info)
@@ -318,7 +318,7 @@ class RepoResultObject(RepoSifting):
 
     @staticmethod
     def from_dyct(dyct):
-        attributes:List[str] = list(RepoResultObject.staticKeyTypeMap().keys())
+        attributes:List[str] = list(RepoResultObject._internal_staticKeyTypeMap().keys())
         columns:List[str] = list(dyct.keys())
 
         if len(attributes) != len(columns):
@@ -329,7 +329,7 @@ class RepoResultObject(RepoSifting):
                 return None
         
         info:Dict[str,any] = {}
-        for keyitr,key,value in enumerate(RepoResultObject.staticKeyTypeMap().items()):
+        for keyitr,key,value in enumerate(RepoResultObject._internal_staticKeyTypeMap().items()):
             info[key] = getattr(builtins,value)(dyct[key])
         
         return RepoResultObject(**info)
