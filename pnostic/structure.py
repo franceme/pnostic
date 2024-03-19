@@ -99,7 +99,7 @@ class RepoSifting(object):
         import csv,io
         output = io.StringIO()
         writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
-        writer.writerow(self.toMap().values())
+        writer.writerow([str(x or '') for x in list(container.toMap().values())])
         return output.getvalue()
     
     @property
@@ -108,7 +108,7 @@ class RepoSifting(object):
         import csv,io
         output = io.StringIO()
         writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
-        writer.writerow(self.staticKeyTypeMap.keys())
+        writer.writerow(self.staticKeyTypeMap().keys())
         return output.getvalue()
 
     @property
@@ -117,8 +117,7 @@ class RepoSifting(object):
         import csv,io
         output = io.StringIO()
         writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
-        for value in self.toMap().values():
-            writer.writerow(value)
+        writer.writerow([str(x or '') for x in list(container.toMap().values())])
         return output.getvalue()
 
 class RepoObject(RepoSifting):
