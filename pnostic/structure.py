@@ -603,29 +603,40 @@ class contextString(object):
         imports:List[str] = []
 
         for line in context.split("\n"):
-            #001:       println("1")
-            #002:       println("1") #!
-            num:int = line.split(":")[0]
-            content:str = line.split(":")[1]
-            vulnerable:bool = content.endswith("#!")
+            if line.strip() != '':
+                vulnerable = False
+                print(line)
+                #001:       println("1")
+                #002:       println("1") #!
 
-            if vulnerable and vulnerableLine is None:
-                vulnerableLine = content
+                splitter = ":"
+                if " => " in line:
+                    splitter = " => "
+                elif " !> " in line:
+                    splitter = " !> "
+                    vulnerable = True
 
-            rawcontent:str = content.replace(line.strip(),'')
-            whitespace:str = content.replace(rawcontent,'')
-            isImport:bool = "import" in rawcontent
-            if isImport:
-                imports += [rawcontent]
+                num:int = line.split(splitter)[0]
+                content:str = line.split(splitter)[1]
+                vulnerable:bool = content.endswith("#!")
 
-            lines += [{
-                "RawLine":line,
-                "LineNum":num,
-                "RawContent":rawcontent,
-                "IsVulnerable":vulnerable,
-                "Whitespace":whitespace,
-                "IsImport":isImport
-            }]
+                if vulnerable and vulnerableLine is None:
+                    vulnerableLine = content
+
+                rawcontent:str = content.replace(line.strip(),'')
+                whitespace:str = content.replace(rawcontent,'')
+                isImport:bool = "import" in rawcontent
+                if isImport:
+                    imports += [rawcontent]
+
+                lines += [{
+                    "RawLine":line,
+                    "LineNum":num,
+                    "RawContent":rawcontent,
+                    "IsVulnerable":vulnerable,
+                    "Whitespace":whitespace,
+                    "IsImport":isImport
+                }]
         
         return contextString(lines=lines, vulnerableLine=vulnerableLine, imports=imports)
 
