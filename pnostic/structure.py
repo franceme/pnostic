@@ -602,41 +602,44 @@ class contextString(object):
         vulnerableLine:str = None
         imports:List[str] = []
 
-        for line in context.split("\n"):
-            if line.strip() != '':
-                vulnerable = False
-                print(line)
-                #001:       println("1")
-                #002:       println("1") #!
+        if context is not None and context.strip() != ''
+            for line in context.split("\n"):
+                if line.strip() != '':
+                    try:
+                        vulnerable = False
+                        print(line)
+                        #001:       println("1")
+                        #002:       println("1") #!
 
-                splitter = ":"
-                if " => " in line:
-                    splitter = " => "
-                elif " !> " in line:
-                    splitter = " !> "
-                    vulnerable = True
+                        splitter = ":"
+                        if " => " in line:
+                            splitter = " => "
+                        elif " !> " in line:
+                            splitter = " !> "
+                            vulnerable = True
 
-                num:int = line.split(splitter)[0]
-                content:str = line.split(splitter)[1]
-                vulnerable:bool = content.endswith("#!")
+                        num:int = line.split(splitter)[0]
+                        content:str = line.split(splitter)[1]
+                        vulnerable:bool = content.endswith("#!")
 
-                if vulnerable and vulnerableLine is None:
-                    vulnerableLine = content
+                        if vulnerable and vulnerableLine is None:
+                            vulnerableLine = content
 
-                rawcontent:str = content.replace(line.strip(),'')
-                whitespace:str = content.replace(rawcontent,'')
-                isImport:bool = "import" in rawcontent
-                if isImport:
-                    imports += [rawcontent]
+                        rawcontent:str = content.replace(line.strip(),'')
+                        whitespace:str = content.replace(rawcontent,'')
+                        isImport:bool = "import" in rawcontent
+                        if isImport:
+                            imports += [rawcontent]
 
-                lines += [{
-                    "RawLine":line,
-                    "LineNum":num,
-                    "RawContent":rawcontent,
-                    "IsVulnerable":vulnerable,
-                    "Whitespace":whitespace,
-                    "IsImport":isImport
-                }]
+                        lines += [{
+                            "RawLine":line,
+                            "LineNum":num,
+                            "RawContent":rawcontent,
+                            "IsVulnerable":vulnerable,
+                            "Whitespace":whitespace,
+                            "IsImport":isImport
+                        }]
+                    except:pass
         
         return contextString(lines=lines, vulnerableLine=vulnerableLine, imports=imports)
 
