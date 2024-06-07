@@ -602,7 +602,7 @@ class contextString(object):
         vulnerableLine:str = None
         imports:List[str] = []
 
-        if context is not None and context.strip() != ''
+        if context is not None and context.strip() != '':
             for line in context.split("\n"):
                 if line.strip() != '':
                     try:
